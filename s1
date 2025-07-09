@@ -215,7 +215,7 @@ else
         end
         clickbtn(PlayerGui.MainUI.MenuFrame.LeftBottomFrame.ExpandFrame.ScaleFrame.Frame.MenuSmallFrame.ExpandFrame.ButtonFrame.Button)
     end
-    if not PlayerGui.MainUI.MenuFrame.LeftFrame.ExpandFrame.ScaleFrame.Frame.Quest.ExpandFrame.ButtonFrame.Button
+    --if not PlayerGui.MainUI.MenuFrame.LeftFrame.ExpandFrame.ScaleFrame.Frame.Quest.ExpandFrame.ButtonFrame.Button
     local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
     --writefile(game, HttpService:JSONEncode(mySettings))
     if PlayerGui.MainUI.MainFrame.Daily.Visible then
