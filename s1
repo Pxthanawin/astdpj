@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GuiService = game:GetService("GuiService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+local HttpService = game:GetService("HttpService")
 
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -86,6 +87,15 @@ task.spawn(function()
 end)
 OptimizeGamePerformance_Nuclear()
 
+local clickbtn = function(button, sleep)
+    if not sleep then sleep = 0.1 end
+    GuiService.SelectedObject = button
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
+    task.wait(sleep)
+    GuiService.SelectedObject = nil
+end
+
 if workspace:GetAttribute("Gameplay") then
 
     ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
@@ -147,6 +157,9 @@ if workspace:GetAttribute("Gameplay") then
 
     task.spawn(function()
         while true do
+            if PlayerGui.MainUI.MainFrame.Daily.Visible then
+                clickbtn(PlayerGui.MainUI.MenuFrame.LeftBottomFrame.ExpandFrame.ScaleFrame.Frame.MenuSmallFrame.ExpandFrame.ButtonFrame.Button)
+            end
             repeat
                 task.wait(0.25)
             until PlayerGui.GU.MenuFrame.TopFrame.Start.Visible
@@ -164,40 +177,50 @@ if workspace:GetAttribute("Gameplay") then
             local ManagerFrame = PlayerGui.GU.ManagerFrame
             for _, v in ipairs(ManagerFrame.SideFrame.UnitFrame.InnerFrame.ScrollingFrame:GetChildren()) do
                 if ManagerFrame.AnchorPoint.X ~= 1 then
-                    GuiService.SelectedObject = PlayerGui.GU.MenuFrame.ExpandFrame.SideFrame.MoveFrame["Unit Manager"].Button
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
-                    task.wait(0.5)
+                    clickbtn(PlayerGui.GU.MenuFrame.ExpandFrame.SideFrame.MoveFrame["Unit Manager"].Button, 0.5)
                 end
                 if v.Name == "PerUnit" then
-                    GuiService.SelectedObject = v.ExpandFrame.UpgradeFrame.AutoFrame.ToggleFrame.ToggleFrame.Button
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
-                    task.wait(0.1)
+                    clickbtn(v.ExpandFrame.UpgradeFrame.AutoFrame.ToggleFrame.ToggleFrame.Button)
                 end
             end
-            GuiService.SelectedObject = nil
 
             repeat
                 task.wait(0.5)
             until PlayerGui.MainUI.ResultFrame.Visible
 
             while PlayerGui.MainUI.ResultFrame.Visible and not PlayerGui.MainUI.ResultFrame.Result.ExpandFrame.ButtonFrame.Visible do
-                GuiService.SelectedObject = PlayerGui.MainUI.ResultFrame.FadeFrame
-                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
-                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
-                task.wait(0.1)
+                clickbtn(PlayerGui.MainUI.ResultFrame.FadeFrame)
             end
             if PlayerGui.MainUI.ResultFrame.Visible and PlayerGui.MainUI.ResultFrame.Result.ExpandFrame.ButtonFrame.Visible then
-                GuiService.SelectedObject = PlayerGui.MainUI.ResultFrame.Result.ExpandFrame.ButtonFrame.ButtonExpand.Replay
-                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
-                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
-                task.wait(0.1)
+                --[[
+                for _, v in ipairs(PlayerGui.MainUI.ResultFrame.Result.ExpandFrame.TopFrame.BoxFrame.InfoFrame2.InnerFrame.CanvasFrame.CanvasGroup.BottomFrame.DetailFrame.RewardFrame.Rewards.RewardScroll:GetChildren()) do
+                    if v.Name == "Frame" and v.Frame.ItemFrame2.ExpandFrame.ClickFrame.HoverFrame.BlackInner.DisplayFrame.ViewFrame.Icon.Image == "http://www.roblox.com/asset/?id=14511803600" then
+                        tonumber(v.Frame.ItemFrame2.ExpandFrame.ClickFrame.HoverFrame.BlackInner.DisplayFrame.Quantity.QuantityText.Text)
+                        break
+                    end
+                end]]
+                clickbtn(PlayerGui.MainUI.ResultFrame.Result.ExpandFrame.ButtonFrame.ButtonExpand.Replay)
             end
         end
     end)
 else
+    while PlayerGui["MessageUI-v2"]:FindFirstChild("Frame") do
+        clickbtn(PlayerGui["MessageUI-v2"].Frame.DisplayButton)
+    end
+    if PlayerGui.MainUI.MainFrame.Daily.Visible then
+        for _, v in ipairs(PlayerGui.MainUI.MainFrame.Daily.LobbyFrame.DailyFrame.Dailys:GetChildren()) do
+            if v:IsA("Frame") then
+                clickbtn(v.HeightFrame.Button)
+            end
+        end
+        clickbtn(PlayerGui.MainUI.MenuFrame.LeftBottomFrame.ExpandFrame.ScaleFrame.Frame.MenuSmallFrame.ExpandFrame.ButtonFrame.Button)
+    end
+    if not PlayerGui.MainUI.MenuFrame.LeftFrame.ExpandFrame.ScaleFrame.Frame.Quest.ExpandFrame.ButtonFrame.Button
     local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
+    --writefile(game, HttpService:JSONEncode(mySettings))
+    if PlayerGui.MainUI.MainFrame.Daily.Visible then
+        clickbtn(PlayerGui.MainUI.MenuFrame.LeftBottomFrame.ExpandFrame.ScaleFrame.Frame.MenuSmallFrame.ExpandFrame.ButtonFrame.Button)
+    end
     GetFunction:InvokeServer({
         Type = "Lobby",
         Object = workspace:WaitForChild("Map"):WaitForChild("Buildings"):WaitForChild("Pods"):WaitForChild("StoryPod"):WaitForChild("Interact"),
