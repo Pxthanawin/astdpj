@@ -113,10 +113,12 @@ if workspace:GetAttribute("Gameplay") then
     })
     local SetEvent = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("SetEvent")
     local waitmoney = function(value)
-        repeat
-            task.wait(0.25)
-        until LocalPlayer.Money.Value >= value
-        task.wait(1.5)
+        while LocalPlayer.Money.Value < value do
+            task.wait()
+            if LocalPlayer.Money.Value >= value then
+                task.wait(2)
+            end
+        end
     end
     local SetUnit = function(name, cf)
         if name == 'Uryu' then
@@ -129,6 +131,7 @@ if workspace:GetAttribute("Gameplay") then
             name,
             cf
         })
+        task.wait(2)
     end
 
     local SetPlan = {
