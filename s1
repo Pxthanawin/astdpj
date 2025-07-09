@@ -1,0 +1,217 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GuiService = game:GetService("GuiService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local VirtualUser = game:service("VirtualUser")
+LocalPlayer.Idled:connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
+
+local function OptimizeGamePerformance_Nuclear()
+    print("WARNING: EXECUTING NUCLEAR PERFORMANCE OPTIMIZATION...")
+
+    local Workspace = game:GetService("Workspace")
+    local Lighting = game:GetService("Lighting")
+    local RunService = game:GetService("RunService")
+    local StarterGui = game:GetService("StarterGui")
+    local Debris = game:GetService("Debris")
+
+    local thisScript = script
+
+    pcall(function()
+        settings().Rendering.GraphicsMode = Enum.GraphicsMode.NoGraphics
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+    end)
+
+    Lighting:ClearAllChildren()
+    Lighting.Technology = Enum.Technology.Compatibility
+    Lighting.GlobalShadows = false
+    Lighting.Brightness = 0
+    Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
+    Lighting.EnvironmentSpecularScale = 0
+    Lighting.EnvironmentDiffuseScale = 0
+
+    local function optimizeOrDestroyObject(obj)
+        pcall(function()
+            if obj:IsA("BasePart") then
+                obj.Anchored = true
+                obj.Transparency = 1
+                obj.CanCollide = false
+                obj.CastShadow = false
+
+            elseif (obj:IsA("Script") or obj:IsA("LocalScript")) and obj ~= thisScript then
+                obj.Disabled = true
+
+            elseif obj:IsA("Humanoid") then
+                local animator = obj:FindFirstChildOfClass("Animator")
+                if animator then
+                    animator:Destroy()
+                end
+                obj.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+
+            elseif obj:IsA("Decal") or obj:IsA("Texture") or obj:IsA("SurfaceGui")
+                or obj:IsA("BillboardGui") or obj:IsA("ParticleEmitter") or obj:IsA("Trail")
+                or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")
+                or obj:IsA("Sound") or obj:IsA("Light") or obj:IsA("PostEffect")
+                or obj:IsA("Atmosphere") or obj:IsA("Sky") or obj:IsA("Clothing")
+                or obj:IsA("Accessory") or obj:IsA("BodyColors") then
+                obj:Destroy()
+            end
+        end)
+    end
+
+    local function executePurge()
+        print("Executing workspace purge...")
+        for _, descendant in ipairs(Workspace:GetDescendants()) do
+            if descendant.Parent then
+                optimizeOrDestroyObject(descendant)
+            end
+        end
+    end
+
+    executePurge()
+end
+task.spawn(function()
+    while task.wait(2) do
+        game:GetService("RunService"):Set3dRenderingEnabled(true)
+        task.wait()
+        game:GetService("RunService"):Set3dRenderingEnabled(false)
+    end
+end)
+OptimizeGamePerformance_Nuclear()
+
+if workspace:GetAttribute("Gameplay") then
+
+    ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
+        Type = "Settings",
+        Mode = "Set",
+        List = {
+            PvPRequest = true,
+            Auto = true,
+            SkipSell = true,
+            EnemyName = true,
+            Enemy = true,
+            EnemyHints = true,
+            Element = true,
+            SpeedUpAllow = true,
+            Low = true,
+            Walk = true,
+            VFX = true,
+            DMG = "None",
+            Cutscene = "Never",
+            BGM = 0,
+            MatchBGM = 0,
+            SFX = 0,
+            UI = 0
+        }
+    })
+    local SetEvent = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("SetEvent")
+    local waitmoney = function(value)
+        repeat
+            task.wait(0.25)
+        until LocalPlayer.Money.Value >= value
+        task.wait(1)
+    end
+    local SetUnit = function(name, cf)
+        if name == 'Uryu' then
+            waitmoney(400)
+        elseif name == 'Goku' then
+            waitmoney(450)
+        end
+        SetEvent:FireServer("GameStuff", {
+            "Summon",
+            name,
+            cf
+        })
+    end
+
+    local SetPlan = {
+        {'Uryu', CFrame.new(-137.64407348632812, 9.381332397460938, -71.56160736083984, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+        {'Uryu', CFrame.new(-141.10516357421875, 9.254250526428223, -71.19571685791016, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+        {'Uryu', CFrame.new(-138.7045440673828, 9.72667121887207, -67.0546875, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+        {'Uryu', CFrame.new(-141.6146697998047, 9.664419174194336, -68.02051544189453, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+        {'Goku', CFrame.new(-90.51226043701172, 3.7593679428100586, -70.42835998535156, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+        {'Goku', CFrame.new(-93.89806365966797, 3.7593679428100586, -70.753173828125, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+        {'Goku', CFrame.new(-90.93028259277344, 3.7593679428100586, -67.10556030273438, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+        {'Goku', CFrame.new(-94.32494354248047, 3.7593679428100586, -67.04347229003906, 1, 0, 0, 0, 1, 0, 0, 0, 1)}
+    }
+
+    task.spawn(function()
+        while true do
+            repeat
+                task.wait(0.25)
+            until PlayerGui.GU.MenuFrame.TopFrame.Start.Visible
+            if PlayerGui.GU.MenuFrame.TopFrame.Start.Visible then ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GameStuff"):FireServer("StartVoteYes") end
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
+                Index = 2,
+                Type = "Speed"
+            })
+
+            for _, v in ipairs(SetPlan) do
+                SetUnit(unpack(v))
+            end
+
+            task.wait(1)
+            local ManagerFrame = PlayerGui.GU.ManagerFrame
+            for _, v in ipairs(ManagerFrame.SideFrame.UnitFrame.InnerFrame.ScrollingFrame:GetChildren()) do
+                if ManagerFrame.AnchorPoint.X ~= 1 then
+                    GuiService.SelectedObject = PlayerGui.GU.MenuFrame.ExpandFrame.SideFrame.MoveFrame["Unit Manager"].Button
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
+                    task.wait(0.5)
+                end
+                if v.Name == "PerUnit" then
+                    GuiService.SelectedObject = v.ExpandFrame.UpgradeFrame.AutoFrame.ToggleFrame.ToggleFrame.Button
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
+                    task.wait(0.1)
+                end
+            end
+            GuiService.SelectedObject = nil
+
+            repeat
+                task.wait(0.5)
+            until PlayerGui.MainUI.ResultFrame.Visible
+
+            while PlayerGui.MainUI.ResultFrame.Visible and not PlayerGui.MainUI.ResultFrame.Result.ExpandFrame.ButtonFrame.Visible do
+                GuiService.SelectedObject = PlayerGui.MainUI.ResultFrame.FadeFrame
+                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
+                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
+                task.wait(0.1)
+            end
+            if PlayerGui.MainUI.ResultFrame.Visible and PlayerGui.MainUI.ResultFrame.Result.ExpandFrame.ButtonFrame.Visible then
+                GuiService.SelectedObject = PlayerGui.MainUI.ResultFrame.Result.ExpandFrame.ButtonFrame.ButtonExpand.Replay
+                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
+                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
+                task.wait(0.1)
+            end
+        end
+    end)
+else
+    local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
+    GetFunction:InvokeServer({
+        Type = "Lobby",
+        Object = workspace:WaitForChild("Map"):WaitForChild("Buildings"):WaitForChild("Pods"):WaitForChild("StoryPod"):WaitForChild("Interact"),
+        Mode = "Pod"
+    })
+    GetFunction:InvokeServer({
+        Chapter = 1, Type = "Lobby",
+		Name = "World1",
+		Difficulty = "Hard",
+		Mode = "Pod",
+		Friend = false,
+		Update = true
+	})
+    GetFunction:InvokeServer({
+        Start = true,
+        Type = "Lobby",
+        Update = true,
+        Mode = "Pod"
+    })
+end
