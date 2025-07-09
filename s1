@@ -116,7 +116,7 @@ if workspace:GetAttribute("Gameplay") then
         repeat
             task.wait(0.25)
         until LocalPlayer.Money.Value >= value
-        task.wait(1)
+        task.wait(1.5)
     end
     local SetUnit = function(name, cf)
         if name == 'Uryu' then
