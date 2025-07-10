@@ -17,7 +17,8 @@ LocalPlayer.Idled:connect(function()
 end)
 
 local TOTAL_PREMIUM
---[[
+local filePremium = "nnm-premium-"..LocalPlayer.Name..".txt"
+
 local mainGui = Instance.new("ScreenGui")
 mainGui.Name = "CustomOverlayGui"
 mainGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
@@ -92,7 +93,7 @@ task.spawn(function()
     while task.wait(1) do
         itemCountLabel.Text = (TOTAL_PREMIUM and tostring(TOTAL_PREMIUM)) or "Loading Data"
     end
-end)]]
+end)
 
 local function OptimizeGamePerformance_Nuclear()
     print("WARNING: EXECUTING NUCLEAR PERFORMANCE OPTIMIZATION...")
@@ -159,13 +160,13 @@ local function OptimizeGamePerformance_Nuclear()
 
     executePurge()
 end
---[[task.spawn(function()
+task.spawn(function()
     while task.wait(2) do
         game:GetService("RunService"):Set3dRenderingEnabled(true)
         task.wait()
         game:GetService("RunService"):Set3dRenderingEnabled(false)
     end
-end)]]
+end)
 OptimizeGamePerformance_Nuclear()
 
 --
@@ -231,12 +232,10 @@ local claimDaily = function()
     end
 end
 
-local filePremium = "nnm-premium-"..LocalPlayer.Name..".txt"
 if workspace:GetAttribute("Gameplay") then
 
     local ResultModule = require(ReplicatedStorage.Main:WaitForChild("Result"))
     local originalSetUp = ResultModule.SetUp
-    local tower = CollectionService:GetTagged("TowerLocalTag")[1]
 
     if isfile(filePremium) then
         TOTAL_PREMIUM = tonumber(readfile(filePremium))
@@ -334,6 +333,7 @@ if workspace:GetAttribute("Gameplay") then
     task.spawn(function()
         while task.wait(0.5) do
             pcall(function()
+                local tower = CollectionService:GetTagged("TowerLocalTag")[1]
                 local currentUnit = #(workspace.EnemyFolder:GetChildren())
                 local UnitFolder = workspace.UnitFolder:GetChildren()
                 if not Lighting:GetAttribute("CurrentWaves") or ((Lighting:GetAttribute("StartVote") ~= Lighting:GetAttribute("StartVoteTotal")) and (Lighting:GetAttribute("CurrentWaves") == 0)) then
@@ -374,9 +374,9 @@ else
     claimQuest()
     claimDaily()
     task.wait(0.5)
-    local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
     writefile(filePremium, tostring(require(ReplicatedStorage.Mods:WaitForChild("Cash")).Get("Premium")))
-    task.wait(0.5)
+    task.wait(1)
+    local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
     GetFunction:InvokeServer({
         Type = "Lobby",
         Object = workspace:WaitForChild("Map"):WaitForChild("Buildings"):WaitForChild("Pods"):WaitForChild("StoryPod"):WaitForChild("Interact"),
