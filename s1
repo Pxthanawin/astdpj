@@ -1,16 +1,97 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local GuiService = game:GetService("GuiService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 local HttpService = game:GetService("HttpService")
+local Lighting = game:GetService("Lighting")
+local CollectionService = game:GetService("CollectionService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+--PlayerGui:Destroy()
 
 local VirtualUser = game:service("VirtualUser")
 LocalPlayer.Idled:connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
+end)
+
+local TOTAL_PREMIUM
+
+local mainGui = Instance.new("ScreenGui")
+mainGui.Name = "CustomOverlayGui"
+mainGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+mainGui.ResetOnSpawn = false
+mainGui.IgnoreGuiInset = true
+mainGui.Parent = CoreGui
+
+local backgroundFrame = Instance.new("Frame")
+backgroundFrame.Name = "Background"
+backgroundFrame.Size = UDim2.new(1, 0, 1, 0)
+backgroundFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+backgroundFrame.BackgroundTransparency = 0
+backgroundFrame.BorderSizePixel = 0
+backgroundFrame.Parent = mainGui
+
+local centerContainer = Instance.new("Frame")
+centerContainer.Name = "CenterContainer"
+centerContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+centerContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
+centerContainer.Size = UDim2.new(0.4, 0, 0.2, 0)
+centerContainer.BackgroundTransparency = 1
+centerContainer.Parent = backgroundFrame
+
+local aspectRatio = Instance.new("UIAspectRatioConstraint")
+aspectRatio.AspectRatio = 2
+aspectRatio.DominantAxis = Enum.DominantAxis.Width
+aspectRatio.Parent = centerContainer
+
+local itemRowLayout = Instance.new("UIListLayout")
+itemRowLayout.FillDirection = Enum.FillDirection.Horizontal
+itemRowLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+itemRowLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+itemRowLayout.SortOrder = Enum.SortOrder.LayoutOrder
+itemRowLayout.Padding = UDim.new(0.05, 0)
+itemRowLayout.Parent = centerContainer
+
+local itemImage = Instance.new("ImageLabel")
+itemImage.Name = "ItemImage"
+itemImage.Size = UDim2.new(0.4, 0, 0.8, 0)
+itemImage.BackgroundTransparency = 1
+itemImage.Image = "rbxassetid://14511803600"
+itemImage.ScaleType = Enum.ScaleType.Fit
+itemImage.LayoutOrder = 1
+itemImage.Parent = centerContainer
+
+local nameLabel = Instance.new("TextLabel")
+nameLabel.Name = "PlayerName"
+nameLabel.Size = UDim2.new(0, 300, 0, 40)
+nameLabel.AnchorPoint = Vector2.new(1, 1)
+nameLabel.Position = UDim2.new(1, -20, 1, -20)
+nameLabel.BackgroundTransparency = 1
+nameLabel.TextColor3 = Color3.new(1, 1, 1)
+nameLabel.Font = Enum.Font.GothamBold
+nameLabel.TextScaled = true
+nameLabel.TextXAlignment = Enum.TextXAlignment.Right
+nameLabel.Text = "Username: " .. LocalPlayer.Name
+nameLabel.Parent = backgroundFrame
+
+local itemCountLabel = Instance.new("TextLabel")
+itemCountLabel.Name = "ItemCount"
+itemCountLabel.Size = UDim2.new(0.5, 0, 1, 0)
+itemCountLabel.BackgroundTransparency = 1
+itemCountLabel.TextColor3 = Color3.new(1, 1, 1)
+itemCountLabel.Font = Enum.Font.GothamBold
+itemCountLabel.TextScaled = true
+itemCountLabel.TextXAlignment = Enum.TextXAlignment.Left
+itemCountLabel.Text = (TOTAL_PREMIUM and tostring(TOTAL_PREMIUM)) or "Loading Data"
+itemCountLabel.LayoutOrder = 2
+itemCountLabel.Parent = centerContainer
+
+task.spawn(function()
+    while task.wait(1) do
+        itemCountLabel.Text = (TOTAL_PREMIUM and tostring(TOTAL_PREMIUM)) or "Loading Data"
+    end
 end)
 
 local function OptimizeGamePerformance_Nuclear()
@@ -85,18 +166,100 @@ task.spawn(function()
         game:GetService("RunService"):Set3dRenderingEnabled(false)
     end
 end)
-OptimizeGamePerformance_Nuclear()
+--OptimizeGamePerformance_Nuclear()
 
-local clickbtn = function(button, sleep)
-    if not sleep then sleep = 0.1 end
-    GuiService.SelectedObject = button
-    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
-    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
-    task.wait(sleep)
-    GuiService.SelectedObject = nil
+--
+
+local QuestMod = require(ReplicatedStorage:WaitForChild("Mods"):WaitForChild("QuestMod"))
+local claimQuest = function()
+    local allQuestsData = QuestMod.Get()
+    if not allQuestsData then return end
+    local totalRewards = {}
+    for questType, questGroup in pairs(allQuestsData) do
+        if questGroup and questGroup.Quests then
+            for _, questInfo in pairs(questGroup.Quests) do
+                if questInfo.Progress >= questInfo.Goal and not questInfo.Completed then
+                    local claimResult = QuestMod.Claim(questType, questInfo.Key)
+                    if claimResult and claimResult.Rewards then
+                        for _, rewardData in pairs(claimResult.Rewards) do
+                            table.insert(totalRewards, rewardData)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if totalRewards and #totalRewards > 0 then
+        local summarizedRewards = {}
+        for _, reward in pairs(totalRewards) do
+            local key = reward.DisplayName or reward.Name or reward.CashType or "Unknown"
+            local amount = reward.Awarded or reward.Amount or 1
+
+            if summarizedRewards[key] then
+                summarizedRewards[key] = summarizedRewards[key] + amount
+            else
+                summarizedRewards[key] = amount
+            end
+        end
+        --[[
+        for name, amount in pairs(summarizedRewards) do
+            print(string.format("  - %s: %s", name, amount))
+        end]]
+        if TOTAL_PREMIUM and summarizedRewards["Premium"] then
+            TOTAL_PREMIUM += summarizedRewards["Premium"]
+        end
+    end
 end
 
+local DailyRewardMod = require(ReplicatedStorage:WaitForChild("Mods"):WaitForChild("DailyMod"))
+local claimDaily = function()
+    local rewardStatus = DailyRewardMod.Get()
+    if not rewardStatus then return end
+    if not rewardStatus.Claimed then
+        local dayToClaim = rewardStatus.Streak + 1
+        if rewardStatus.Rewards and rewardStatus.Rewards[dayToClaim] then
+            local rewardInfo = rewardStatus.Rewards[dayToClaim][1]
+            if rewardInfo then
+                local rewardName = rewardInfo.DisplayName or rewardInfo.Name or rewardInfo.CashType or "Unknown Reward"
+                local rewardAmount = rewardInfo.Amount or 1
+                if TOTAL_PREMIUM and rewardName == 'Premium' then
+                    TOTAL_PREMIUM += rewardAmount
+                end
+            end
+        end
+        DailyRewardMod.Claim()
+    end
+end
+
+local filePremium = "nnm-premium-"..LocalPlayer.Name..".txt"
 if workspace:GetAttribute("Gameplay") then
+
+    local ResultModule = require(ReplicatedStorage.Main:WaitForChild("Result"))
+    local originalSetUp = ResultModule.SetUp
+    local tower = CollectionService:GetTagged("TowerLocalTag")[1]
+
+    if isfile(filePremium) then
+        TOTAL_PREMIUM = tonumber(readfile(filePremium))
+    else
+        TOTAL_PREMIUM = 0
+    end
+
+    claimQuest()
+
+    ResultModule.SetUp = function(...)
+        local args = {...}
+        local resultInfo = args[2]
+
+        if resultInfo and resultInfo.Result and resultInfo.Result.Rewards then
+            for _, reward in pairs(resultInfo.Result.Rewards) do
+                if reward.CashType == "Premium" then
+                    TOTAL_PREMIUM += reward.Awarded
+                end
+            end
+        end
+
+        return originalSetUp(...)
+    end
 
     ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
         Type = "Settings",
@@ -132,18 +295,30 @@ if workspace:GetAttribute("Gameplay") then
     end
     local SetUnit = function(name, cf)
         if name == 'Uryu' then
-            waitmoney(400)
+            if LocalPlayer.Money.Value < 400 then
+                return
+            end
         elseif name == 'Goku' then
-            waitmoney(450)
+            if LocalPlayer.Money.Value < 450 then
+                return
+            end
         end
         SetEvent:FireServer("GameStuff", {
             "Summon",
             name,
             cf
         })
-        task.wait(2)
     end
-
+    local UpgradeUnit = function(instant)
+        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({Type = "GameStuff"}, {"Upgrade", instant})
+    end
+    local Replay = function()
+        ReplicatedStorage.Remotes.GetFunction:InvokeServer({
+            Type = "Game",
+            Index = "Replay",
+            Mode = "Reward"
+        })
+    end
     local SetPlan = {
         {'Uryu', CFrame.new(-137.64407348632812, 9.381332397460938, -71.56160736083984, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
         {'Uryu', CFrame.new(-141.10516357421875, 9.254250526428223, -71.19571685791016, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
@@ -155,72 +330,53 @@ if workspace:GetAttribute("Gameplay") then
         {'Goku', CFrame.new(-94.32494354248047, 3.7593679428100586, -67.04347229003906, 1, 0, 0, 0, 1, 0, 0, 0, 1)}
     }
 
+    local currentPlan = SetPlan
     task.spawn(function()
-        while true do
-            if PlayerGui.MainUI.MainFrame.Daily.Visible then
-                clickbtn(PlayerGui.MainUI.MenuFrame.LeftBottomFrame.ExpandFrame.ScaleFrame.Frame.MenuSmallFrame.ExpandFrame.ButtonFrame.Button)
-            end
-            repeat
-                task.wait(0.25)
-            until PlayerGui.GU.MenuFrame.TopFrame.Start.Visible
-            if PlayerGui.GU.MenuFrame.TopFrame.Start.Visible then ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GameStuff"):FireServer("StartVoteYes") end
-            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
-                Index = 2,
-                Type = "Speed"
-            })
-
-            for _, v in ipairs(SetPlan) do
-                SetUnit(unpack(v))
-            end
-
-            task.wait(1)
-            local ManagerFrame = PlayerGui.GU.ManagerFrame
-            for _, v in ipairs(ManagerFrame.SideFrame.UnitFrame.InnerFrame.ScrollingFrame:GetChildren()) do
-                if ManagerFrame.AnchorPoint.X ~= 1 then
-                    clickbtn(PlayerGui.GU.MenuFrame.ExpandFrame.SideFrame.MoveFrame["Unit Manager"].Button, 0.5)
-                end
-                if v.Name == "PerUnit" then
-                    clickbtn(v.ExpandFrame.UpgradeFrame.AutoFrame.ToggleFrame.ToggleFrame.Button)
-                end
-            end
-
-            repeat
-                task.wait(0.5)
-            until PlayerGui.MainUI.ResultFrame.Visible
-
-            while PlayerGui.MainUI.ResultFrame.Visible and not PlayerGui.MainUI.ResultFrame.Result.ExpandFrame.ButtonFrame.Visible do
-                clickbtn(PlayerGui.MainUI.ResultFrame.FadeFrame)
-            end
-            if PlayerGui.MainUI.ResultFrame.Visible and PlayerGui.MainUI.ResultFrame.Result.ExpandFrame.ButtonFrame.Visible then
-                --[[
-                for _, v in ipairs(PlayerGui.MainUI.ResultFrame.Result.ExpandFrame.TopFrame.BoxFrame.InfoFrame2.InnerFrame.CanvasFrame.CanvasGroup.BottomFrame.DetailFrame.RewardFrame.Rewards.RewardScroll:GetChildren()) do
-                    if v.Name == "Frame" and v.Frame.ItemFrame2.ExpandFrame.ClickFrame.HoverFrame.BlackInner.DisplayFrame.ViewFrame.Icon.Image == "http://www.roblox.com/asset/?id=14511803600" then
-                        tonumber(v.Frame.ItemFrame2.ExpandFrame.ClickFrame.HoverFrame.BlackInner.DisplayFrame.Quantity.QuantityText.Text)
-                        break
+        while task.wait(0.5) do
+            pcall(function()
+                local currentUnit = #(workspace.EnemyFolder:GetChildren())
+                local UnitFolder = workspace.UnitFolder:GetChildren()
+                if not Lighting:GetAttribute("CurrentWaves") or ((Lighting:GetAttribute("StartVote") ~= Lighting:GetAttribute("StartVoteTotal")) and (Lighting:GetAttribute("CurrentWaves") == 0)) then
+                    -- start
+                    currentPlan = SetPlan
+                    if ReplicatedStorage.GameSpeed.Value == 1 then
+                        ReplicatedStorage.Remotes.GetFunction:InvokeServer({
+                            Index = 2,
+                            Type = "Speed"
+                        })
                     end
-                end]]
-                clickbtn(PlayerGui.MainUI.ResultFrame.Result.ExpandFrame.ButtonFrame.ButtonExpand.Replay)
-            end
+                    ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GameStuff"):FireServer("StartVoteYes")
+                elseif (Lighting:GetAttribute("CurrentWaves") == Lighting:GetAttribute("TotalWaves")) and (currentUnit == 0) then
+                    -- result
+                    claimQuest()
+                    Replay()
+                elseif (tower:GetAttribute("LocalHeart") == 0) and (tower:GetAttribute("LocalHP") == 0) then
+                    -- game-over
+                    Replay()
+                else
+                    -- in-game
+                    if #UnitFolder >= #SetPlan then
+                        for _, v in ipairs(UnitFolder) do
+                            if v:GetAttribute("UpgradeLevel") >= v:GetAttribute("UnitStars") + 1 then
+                                continue
+                            end
+                            UpgradeUnit(v)
+                            break
+                        end
+                    else
+                        SetUnit(unpack(SetPlan[#UnitFolder+1]))
+                    end
+                end
+            end)
         end
     end)
 else
-    while PlayerGui["MessageUI-v2"]:FindFirstChild("Frame") do
-        clickbtn(PlayerGui["MessageUI-v2"].Frame.DisplayButton)
-    end
-    if PlayerGui.MainUI.MainFrame.Daily.Visible then
-        for _, v in ipairs(PlayerGui.MainUI.MainFrame.Daily.LobbyFrame.DailyFrame.Dailys:GetChildren()) do
-            if v:IsA("Frame") then
-                clickbtn(v.HeightFrame.Button)
-            end
-        end
-        clickbtn(PlayerGui.MainUI.MenuFrame.LeftBottomFrame.ExpandFrame.ScaleFrame.Frame.MenuSmallFrame.ExpandFrame.ButtonFrame.Button)
-    end
-    --if not PlayerGui.MainUI.MenuFrame.LeftFrame.ExpandFrame.ScaleFrame.Frame.Quest.ExpandFrame.ButtonFrame.Button
+    claimQuest()
+    claimDaily()
+    task.wait(0.5)
     local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
-    --writefile(game, HttpService:JSONEncode(mySettings))
-    if PlayerGui.MainUI.MainFrame.Daily.Visible then
-        clickbtn(PlayerGui.MainUI.MenuFrame.LeftBottomFrame.ExpandFrame.ScaleFrame.Frame.MenuSmallFrame.ExpandFrame.ButtonFrame.Button)
-    end
+    writefile(filePremium, tostring(require(ReplicatedStorage.Mods:WaitForChild("Cash")).Get("Premium")))
+    task.wait(0.5)
     GetFunction:InvokeServer({
         Type = "Lobby",
         Object = workspace:WaitForChild("Map"):WaitForChild("Buildings"):WaitForChild("Pods"):WaitForChild("StoryPod"):WaitForChild("Interact"),
