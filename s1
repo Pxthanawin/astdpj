@@ -8,7 +8,7 @@ local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
---PlayerGui:Destroy()
+PlayerGui:Destroy()
 
 local VirtualUser = game:service("VirtualUser")
 LocalPlayer.Idled:connect(function()
@@ -18,7 +18,7 @@ end)
 
 local TOTAL_PREMIUM
 local filePremium = "nnm-premium-"..LocalPlayer.Name..".txt"
---[[
+
 local mainGui = Instance.new("ScreenGui")
 mainGui.Name = "CustomOverlayGui"
 mainGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
@@ -93,8 +93,8 @@ task.spawn(function()
     while task.wait(1) do
         itemCountLabel.Text = (TOTAL_PREMIUM and tostring(TOTAL_PREMIUM)) or "Loading Data"
     end
-end)]]
---[[
+end)
+
 local function OptimizeGamePerformance_Nuclear()
     print("WARNING: EXECUTING NUCLEAR PERFORMANCE OPTIMIZATION...")
 
@@ -168,7 +168,7 @@ task.spawn(function()
     end
 end)
 OptimizeGamePerformance_Nuclear()
-]]
+
 --
 
 local QuestMod = require(ReplicatedStorage:WaitForChild("Mods"):WaitForChild("QuestMod"))
