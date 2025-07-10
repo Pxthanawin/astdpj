@@ -94,7 +94,7 @@ task.spawn(function()
         itemCountLabel.Text = (TOTAL_PREMIUM and tostring(TOTAL_PREMIUM)) or "Loading Data"
     end
 end)]]
-
+--[[
 local function OptimizeGamePerformance_Nuclear()
     print("WARNING: EXECUTING NUCLEAR PERFORMANCE OPTIMIZATION...")
 
@@ -168,7 +168,7 @@ task.spawn(function()
     end
 end)
 OptimizeGamePerformance_Nuclear()
-
+]]
 --
 
 local QuestMod = require(ReplicatedStorage:WaitForChild("Mods"):WaitForChild("QuestMod"))
