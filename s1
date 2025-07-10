@@ -17,7 +17,7 @@ LocalPlayer.Idled:connect(function()
 end)
 
 local TOTAL_PREMIUM
-
+--[[
 local mainGui = Instance.new("ScreenGui")
 mainGui.Name = "CustomOverlayGui"
 mainGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
@@ -92,7 +92,7 @@ task.spawn(function()
     while task.wait(1) do
         itemCountLabel.Text = (TOTAL_PREMIUM and tostring(TOTAL_PREMIUM)) or "Loading Data"
     end
-end)
+end)]]
 
 local function OptimizeGamePerformance_Nuclear()
     print("WARNING: EXECUTING NUCLEAR PERFORMANCE OPTIMIZATION...")
@@ -159,14 +159,14 @@ local function OptimizeGamePerformance_Nuclear()
 
     executePurge()
 end
-task.spawn(function()
+--[[task.spawn(function()
     while task.wait(2) do
         game:GetService("RunService"):Set3dRenderingEnabled(true)
         task.wait()
         game:GetService("RunService"):Set3dRenderingEnabled(false)
     end
-end)
---OptimizeGamePerformance_Nuclear()
+end)]]
+OptimizeGamePerformance_Nuclear()
 
 --
 
