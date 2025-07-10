@@ -243,8 +243,6 @@ if workspace:GetAttribute("Gameplay") then
         TOTAL_PREMIUM = 0
     end
 
-    claimQuest()
-
     ResultModule.SetUp = function(...)
         local args = {...}
         local resultInfo = args[2]
@@ -284,14 +282,6 @@ if workspace:GetAttribute("Gameplay") then
         }
     })
     local SetEvent = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("SetEvent")
-    local waitmoney = function(value)
-        while LocalPlayer.Money.Value < value do
-            task.wait()
-            if LocalPlayer.Money.Value >= value then
-                task.wait(2)
-            end
-        end
-    end
     local SetUnit = function(name, cf)
         if name == 'Uryu' then
             if LocalPlayer.Money.Value < 400 then
@@ -349,9 +339,11 @@ if workspace:GetAttribute("Gameplay") then
                 elseif (Lighting:GetAttribute("CurrentWaves") == Lighting:GetAttribute("TotalWaves")) and (currentUnit == 0) then
                     -- result
                     claimQuest()
+                    task.wait(2)
                     Replay()
                 elseif (tower:GetAttribute("LocalHeart") == 0) and (tower:GetAttribute("LocalHP") == 0) then
                     -- game-over
+                    task.wait(2)
                     Replay()
                 else
                     -- in-game
