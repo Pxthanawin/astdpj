@@ -184,7 +184,6 @@ task.spawn(function()
         RunService:Set3dRenderingEnabled(false)
     end
 end)]]
-OptimizeGamePerformance_Nuclear()
 
 --
 
@@ -252,7 +251,9 @@ end
 task.spawn(function()
     if workspace:GetAttribute("Gameplay") then
 
-        task.wait(5)
+        task.wait(4)
+
+        pcall(OptimizeGamePerformance_Nuclear)
 
         task.spawn(function()
             task.wait(10)
@@ -401,7 +402,8 @@ task.spawn(function()
             end
         end)
     else
-        task.wait(5)
+        pcall(OptimizeGamePerformance_Nuclear)
+        task.wait(4)
         claimDaily()
         for _, v in ipairs(allcode) do
             ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
