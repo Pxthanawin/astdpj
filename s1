@@ -111,155 +111,157 @@ end)
 
 --
 
-local function OptimizeGamePerformance_Nuclear()
-    print("WARNING: EXECUTING NUCLEAR PERFORMANCE OPTIMIZATION...")
+task.spawn(function()
 
-    local Workspace = game:GetService("Workspace")
-    local Lighting = game:GetService("Lighting")
-    local RunService = game:GetService("RunService")
-    local StarterGui = game:GetService("StarterGui")
-    local Debris = game:GetService("Debris")
+    while not LocalPlayer:GetAttribute("LoadCompleted") do task.wait() end
 
-    local thisScript = script
+    --
+    local function OptimizeGamePerformance_Nuclear()
+        print("WARNING: EXECUTING NUCLEAR PERFORMANCE OPTIMIZATION...")
 
-    pcall(function()
-        settings().Rendering.GraphicsMode = Enum.GraphicsMode.NoGraphics
-        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
-    end)
+        local Workspace = game:GetService("Workspace")
+        local Lighting = game:GetService("Lighting")
+        local RunService = game:GetService("RunService")
+        local StarterGui = game:GetService("StarterGui")
+        local Debris = game:GetService("Debris")
 
-    Lighting:ClearAllChildren()
-    Lighting.Technology = Enum.Technology.Compatibility
-    Lighting.GlobalShadows = false
-    Lighting.Brightness = 0
-    Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
-    Lighting.EnvironmentSpecularScale = 0
-    Lighting.EnvironmentDiffuseScale = 0
+        local thisScript = script
 
-    local function optimizeOrDestroyObject(obj)
         pcall(function()
-            if obj:IsA("BasePart") then
-                obj.Anchored = true
-                obj.Transparency = 1
-                obj.CanCollide = false
-                obj.CastShadow = false
-
-            elseif (obj:IsA("Script") or obj:IsA("LocalScript")) and obj ~= thisScript then
-                obj.Disabled = true
-
-            elseif obj:IsA("Humanoid") then
-                local animator = obj:FindFirstChildOfClass("Animator")
-                if animator then
-                    animator:Destroy()
-                end
-                obj.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-
-            elseif obj:IsA("Decal") or obj:IsA("Texture") or obj:IsA("SurfaceGui")
-                or obj:IsA("BillboardGui") or obj:IsA("ParticleEmitter") or obj:IsA("Trail")
-                or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")
-                or obj:IsA("Sound") or obj:IsA("Light") or obj:IsA("PostEffect")
-                or obj:IsA("Atmosphere") or obj:IsA("Sky") or obj:IsA("Clothing")
-                or obj:IsA("Accessory") or obj:IsA("BodyColors") then
-                obj:Destroy()
-            end
+            settings().Rendering.GraphicsMode = Enum.GraphicsMode.NoGraphics
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+            StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
         end)
-    end
 
-    local function executePurge()
-        print("Executing workspace purge...")
-        for _, descendant in ipairs(Workspace:GetDescendants()) do
-            if descendant.Parent then
-                optimizeOrDestroyObject(descendant)
+        Lighting:ClearAllChildren()
+        Lighting.Technology = Enum.Technology.Compatibility
+        Lighting.GlobalShadows = false
+        Lighting.Brightness = 0
+        Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
+        Lighting.EnvironmentSpecularScale = 0
+        Lighting.EnvironmentDiffuseScale = 0
+
+        local function optimizeOrDestroyObject(obj)
+            pcall(function()
+                if obj:IsA("BasePart") then
+                    obj.Anchored = true
+                    obj.Transparency = 1
+                    obj.CanCollide = false
+                    obj.CastShadow = false
+
+                elseif (obj:IsA("Script") or obj:IsA("LocalScript")) and obj ~= thisScript then
+                    obj.Disabled = true
+
+                elseif obj:IsA("Humanoid") then
+                    local animator = obj:FindFirstChildOfClass("Animator")
+                    if animator then
+                        animator:Destroy()
+                    end
+                    obj.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+
+                elseif obj:IsA("Decal") or obj:IsA("Texture") or obj:IsA("SurfaceGui")
+                    or obj:IsA("BillboardGui") or obj:IsA("ParticleEmitter") or obj:IsA("Trail")
+                    or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")
+                    or obj:IsA("Sound") or obj:IsA("Light") or obj:IsA("PostEffect")
+                    or obj:IsA("Atmosphere") or obj:IsA("Sky") or obj:IsA("Clothing")
+                    or obj:IsA("Accessory") or obj:IsA("BodyColors") then
+                    obj:Destroy()
+                end
+            end)
+        end
+
+        local function executePurge()
+            print("Executing workspace purge...")
+            for _, descendant in ipairs(Workspace:GetDescendants()) do
+                if descendant.Parent then
+                    optimizeOrDestroyObject(descendant)
+                end
             end
         end
+
+        executePurge()
     end
+    --[[
+    task.spawn(function()
+        while task.wait(2) do
+            RunService:Set3dRenderingEnabled(true)
+            task.wait()
+            RunService:Set3dRenderingEnabled(false)
+        end
+    end)]]
+    pcall(OptimizeGamePerformance_Nuclear)
+    --
 
-    executePurge()
-end
---[[
-task.spawn(function()
-    while task.wait(2) do
-        RunService:Set3dRenderingEnabled(true)
-        task.wait()
-        RunService:Set3dRenderingEnabled(false)
-    end
-end)]]
-
---
-
-local QuestMod = require(ReplicatedStorage:WaitForChild("Mods"):WaitForChild("QuestMod"))
-local claimQuest = function()
-    local allQuestsData = QuestMod.Get()
-    if not allQuestsData then return end
-    local totalRewards = {}
-    for questType, questGroup in pairs(allQuestsData) do
-        if questGroup and questGroup.Quests then
-            for _, questInfo in pairs(questGroup.Quests) do
-                if questInfo.Progress >= questInfo.Goal and not questInfo.Completed then
-                    local claimResult = QuestMod.Claim(questType, questInfo.Key)
-                    if claimResult and claimResult.Rewards then
-                        for _, rewardData in pairs(claimResult.Rewards) do
-                            table.insert(totalRewards, rewardData)
+    local QuestMod = require(ReplicatedStorage:WaitForChild("Mods"):WaitForChild("QuestMod"))
+    local claimQuest = function()
+        local allQuestsData = QuestMod.Get()
+        if not allQuestsData then return end
+        local totalRewards = {}
+        for questType, questGroup in pairs(allQuestsData) do
+            if questGroup and questGroup.Quests then
+                for _, questInfo in pairs(questGroup.Quests) do
+                    if questInfo.Progress >= questInfo.Goal and not questInfo.Completed then
+                        local claimResult = QuestMod.Claim(questType, questInfo.Key)
+                        if claimResult and claimResult.Rewards then
+                            for _, rewardData in pairs(claimResult.Rewards) do
+                                table.insert(totalRewards, rewardData)
+                            end
                         end
                     end
                 end
             end
         end
-    end
-    if totalRewards and #totalRewards > 0 then
-        local summarizedRewards = {}
-        for _, reward in pairs(totalRewards) do
-            local key = reward.DisplayName or reward.Name or reward.CashType or "Unknown"
-            local amount = reward.Awarded or reward.Amount or 1
+        if totalRewards and #totalRewards > 0 then
+            local summarizedRewards = {}
+            for _, reward in pairs(totalRewards) do
+                local key = reward.DisplayName or reward.Name or reward.CashType or "Unknown"
+                local amount = reward.Awarded or reward.Amount or 1
 
-            if summarizedRewards[key] then
-                summarizedRewards[key] = summarizedRewards[key] + amount
-            else
-                summarizedRewards[key] = amount
-            end
-        end
-        --[[
-        for name, amount in pairs(summarizedRewards) do
-            print(string.format("  - %s: %s", name, amount))
-        end]]
-        if TOTAL_PREMIUM and summarizedRewards["Premium"] then
-            TOTAL_PREMIUM += summarizedRewards["Premium"]
-        end
-    end
-end
-
-local DailyRewardMod = require(ReplicatedStorage:WaitForChild("Mods"):WaitForChild("DailyMod"))
-local claimDaily = function()
-    local rewardStatus = DailyRewardMod.Get()
-    if not rewardStatus then return end
-    if not rewardStatus.Claimed then
-        local dayToClaim = rewardStatus.Streak + 1
-        if rewardStatus.Rewards and rewardStatus.Rewards[dayToClaim] then
-            local rewardInfo = rewardStatus.Rewards[dayToClaim][1]
-            if rewardInfo then
-                local rewardName = rewardInfo.DisplayName or rewardInfo.Name or rewardInfo.CashType or "Unknown Reward"
-                local rewardAmount = rewardInfo.Amount or 1
-                if TOTAL_PREMIUM and rewardName == 'Premium' then
-                    TOTAL_PREMIUM += rewardAmount
+                if summarizedRewards[key] then
+                    summarizedRewards[key] = summarizedRewards[key] + amount
+                else
+                    summarizedRewards[key] = amount
                 end
             end
+            --[[
+            for name, amount in pairs(summarizedRewards) do
+                print(string.format("  - %s: %s", name, amount))
+            end]]
+            if TOTAL_PREMIUM and summarizedRewards["Premium"] then
+                TOTAL_PREMIUM += summarizedRewards["Premium"]
+            end
         end
-        DailyRewardMod.Claim()
     end
-end
 
-task.spawn(function()
+    local DailyRewardMod = require(ReplicatedStorage:WaitForChild("Mods"):WaitForChild("DailyMod"))
+    local claimDaily = function()
+        local rewardStatus = DailyRewardMod.Get()
+        if not rewardStatus then return end
+        if not rewardStatus.Claimed then
+            local dayToClaim = rewardStatus.Streak + 1
+            if rewardStatus.Rewards and rewardStatus.Rewards[dayToClaim] then
+                local rewardInfo = rewardStatus.Rewards[dayToClaim][1]
+                if rewardInfo then
+                    local rewardName = rewardInfo.DisplayName or rewardInfo.Name or rewardInfo.CashType or "Unknown Reward"
+                    local rewardAmount = rewardInfo.Amount or 1
+                    if TOTAL_PREMIUM and rewardName == 'Premium' then
+                        TOTAL_PREMIUM += rewardAmount
+                    end
+                end
+            end
+            DailyRewardMod.Claim()
+        end
+    end
+    --
+
     if workspace:GetAttribute("Gameplay") then
 
-        task.wait(4)
         task.spawn(function()
             task.wait(20)
             if #(workspace.UnitFolder:GetChildren()) == 0 then
                 TeleportService:Teleport(game.PlaceId, LocalPlayer)
             end
         end)
-
-        pcall(OptimizeGamePerformance_Nuclear)
 
         task.spawn(function()
             task.wait(10)
@@ -408,8 +410,6 @@ task.spawn(function()
             end
         end)
     else
-        pcall(OptimizeGamePerformance_Nuclear)
-        task.wait(4)
         claimDaily()
         for _, v in ipairs(allcode) do
             ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
@@ -418,7 +418,6 @@ task.spawn(function()
                 ["Code"] = v
             })
         end
-        task.wait(1)
         writefile(filePremium, tostring(require(ReplicatedStorage.Mods:WaitForChild("Cash")).Get("Premium")))
         local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
         GetFunction:InvokeServer({
