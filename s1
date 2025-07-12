@@ -386,11 +386,11 @@ task.spawn(function()
                         ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GameStuff"):FireServer("StartVoteYes")
                     elseif (Lighting:GetAttribute("CurrentWaves") == Lighting:GetAttribute("TotalWaves")) and (currentUnit == 0) then
                         -- result
-                        task.wait(2)
+                        task.wait(3)
                         Replay()
                     elseif (tower:GetAttribute("LocalHeart") == 0) and (tower:GetAttribute("LocalHP") == 0) then
                         -- game-over
-                        task.wait(2)
+                        task.wait(3)
                         Replay()
                     else
                         -- in-game
