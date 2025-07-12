@@ -1,3 +1,12 @@
+-- --- Core Settings ---
+local SERVER_URL = "http://223.204.251.236:3000/api/heartbeat"
+local HEARTBEAT_INTERVAL = 3
+local CONFIG = __CONFIG__
+
+local isSystemActive = true
+local lastHeartbeatSent = 0
+local TOTAL_PREMIUM
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
@@ -5,19 +14,20 @@ local Lighting = game:GetService("Lighting")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local TeleportService = game:GetService("TeleportService")
+local GuiService = game:GetService("GuiService")
 
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-PlayerGui:Destroy()
+
+local filePremium = "nnm-premium-"..LocalPlayer.Name..".txt"
+local allcode = {"superdaydaykid100ksubs", "sbrupdate", "omgupdate2024", "animecardbattle", "blamspot500kcodeunitrelease", "egoupdate", "fraudkunaupdate"}
 
 local VirtualUser = game:service("VirtualUser")
 LocalPlayer.Idled:connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
 end)
-
-local TOTAL_PREMIUM
-local filePremium = "nnm-premium-"..LocalPlayer.Name..".txt"
 
 local mainGui = Instance.new("ScreenGui")
 mainGui.Name = "CustomOverlayGui"
@@ -30,7 +40,7 @@ local backgroundFrame = Instance.new("Frame")
 backgroundFrame.Name = "Background"
 backgroundFrame.Size = UDim2.new(1, 0, 1, 0)
 backgroundFrame.BackgroundColor3 = Color3.new(0, 0, 0)
-backgroundFrame.BackgroundTransparency = 0
+backgroundFrame.BackgroundTransparency = 0.5
 backgroundFrame.BorderSizePixel = 0
 backgroundFrame.Parent = mainGui
 
@@ -90,10 +100,16 @@ itemCountLabel.LayoutOrder = 2
 itemCountLabel.Parent = centerContainer
 
 task.spawn(function()
+    local currentdp
     while task.wait(1) do
-        itemCountLabel.Text = (TOTAL_PREMIUM and tostring(TOTAL_PREMIUM)) or "Loading Data"
+        if TOTAL_PREMIUM ~= currentdp then
+            currentdp = TOTAL_PREMIUM
+            itemCountLabel.Text = (TOTAL_PREMIUM and tostring(TOTAL_PREMIUM)) or "Loading Data"
+        end
     end
 end)
+
+--
 
 local function OptimizeGamePerformance_Nuclear()
     print("WARNING: EXECUTING NUCLEAR PERFORMANCE OPTIMIZATION...")
@@ -160,13 +176,14 @@ local function OptimizeGamePerformance_Nuclear()
 
     executePurge()
 end
+--[[
 task.spawn(function()
     while task.wait(2) do
-        game:GetService("RunService"):Set3dRenderingEnabled(true)
+        RunService:Set3dRenderingEnabled(true)
         task.wait()
-        game:GetService("RunService"):Set3dRenderingEnabled(false)
+        RunService:Set3dRenderingEnabled(false)
     end
-end)
+end)]]
 OptimizeGamePerformance_Nuclear()
 
 --
@@ -232,160 +249,294 @@ local claimDaily = function()
     end
 end
 
-if workspace:GetAttribute("Gameplay") then
+task.spawn(function()
+    if workspace:GetAttribute("Gameplay") then
 
-    local ResultModule = require(ReplicatedStorage.Main:WaitForChild("Result"))
-    local originalSetUp = ResultModule.SetUp
+        task.wait(4)
 
-    if isfile(filePremium) then
-        TOTAL_PREMIUM = tonumber(readfile(filePremium))
-    else
-        TOTAL_PREMIUM = 0
-    end
-
-    ResultModule.SetUp = function(...)
-        local args = {...}
-        local resultInfo = args[2]
-
-        if resultInfo and resultInfo.Result and resultInfo.Result.Rewards then
-            for _, reward in pairs(resultInfo.Result.Rewards) do
-                if reward.CashType == "Premium" then
-                    TOTAL_PREMIUM += reward.Awarded
+        task.spawn(function()
+            task.wait(4)
+            for _, v in ipairs(PlayerGui:GetChildren()) do
+                if table.find({"GU", "MainUI", "MainUI2"}, v.Name) then
+                    --v.Enabled = false
+                else
+                    v:Destroy()
                 end
             end
-        end
 
-        return originalSetUp(...)
-    end
-
-    ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
-        Type = "Settings",
-        Mode = "Set",
-        List = {
-            PvPRequest = true,
-            Auto = true,
-            SkipSell = true,
-            EnemyName = true,
-            Enemy = true,
-            EnemyHints = true,
-            Element = true,
-            SpeedUpAllow = true,
-            Low = true,
-            Walk = true,
-            VFX = true,
-            DMG = "None",
-            Cutscene = "Never",
-            BGM = 0,
-            MatchBGM = 0,
-            SFX = 0,
-            UI = 0
-        }
-    })
-    local SetEvent = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("SetEvent")
-    local SetUnit = function(name, cf)
-        if name == 'Uryu' then
-            if LocalPlayer.Money.Value < 400 then
-                return
-            end
-        elseif name == 'Goku' then
-            if LocalPlayer.Money.Value < 450 then
-                return
-            end
-        end
-        SetEvent:FireServer("GameStuff", {
-            "Summon",
-            name,
-            cf
-        })
-    end
-    local UpgradeUnit = function(instant)
-        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({Type = "GameStuff"}, {"Upgrade", instant})
-    end
-    local Replay = function()
-        ReplicatedStorage.Remotes.GetFunction:InvokeServer({
-            Type = "Game",
-            Index = "Replay",
-            Mode = "Reward"
-        })
-    end
-    local SetPlan = {
-        {'Uryu', CFrame.new(-137.64407348632812, 9.381332397460938, -71.56160736083984, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
-        {'Uryu', CFrame.new(-141.10516357421875, 9.254250526428223, -71.19571685791016, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
-        {'Uryu', CFrame.new(-138.7045440673828, 9.72667121887207, -67.0546875, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
-        {'Uryu', CFrame.new(-141.6146697998047, 9.664419174194336, -68.02051544189453, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
-        {'Goku', CFrame.new(-90.51226043701172, 3.7593679428100586, -70.42835998535156, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
-        {'Goku', CFrame.new(-93.89806365966797, 3.7593679428100586, -70.753173828125, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
-        {'Goku', CFrame.new(-90.93028259277344, 3.7593679428100586, -67.10556030273438, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
-        {'Goku', CFrame.new(-94.32494354248047, 3.7593679428100586, -67.04347229003906, 1, 0, 0, 0, 1, 0, 0, 0, 1)}
-    }
-
-    local currentPlan = SetPlan
-    task.spawn(function()
-        while task.wait(0.5) do
-            pcall(function()
-                local tower = CollectionService:GetTagged("TowerLocalTag")[1]
-                local currentUnit = #(workspace.EnemyFolder:GetChildren())
-                local UnitFolder = workspace.UnitFolder:GetChildren()
-                if not Lighting:GetAttribute("CurrentWaves") or ((Lighting:GetAttribute("StartVote") ~= Lighting:GetAttribute("StartVoteTotal")) and (Lighting:GetAttribute("CurrentWaves") == 0)) then
-                    -- start
-                    currentPlan = SetPlan
-                    if ReplicatedStorage.GameSpeed.Value == 1 then
-                        ReplicatedStorage.Remotes.GetFunction:InvokeServer({
-                            Index = 2,
-                            Type = "Speed"
-                        })
-                    end
-                    ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GameStuff"):FireServer("StartVoteYes")
-                elseif (Lighting:GetAttribute("CurrentWaves") == Lighting:GetAttribute("TotalWaves")) and (currentUnit == 0) then
-                    -- result
-                    claimQuest()
-                    task.wait(2)
-                    Replay()
-                elseif (tower:GetAttribute("LocalHeart") == 0) and (tower:GetAttribute("LocalHP") == 0) then
-                    -- game-over
-                    task.wait(2)
-                    Replay()
-                else
-                    -- in-game
-                    if #UnitFolder >= #SetPlan then
-                        for _, v in ipairs(UnitFolder) do
-                            if v:GetAttribute("UpgradeLevel") >= v:GetAttribute("UnitStars") + 1 then
-                                continue
-                            end
-                            UpgradeUnit(v)
-                            break
-                        end
-                    else
-                        SetUnit(unpack(SetPlan[#UnitFolder+1]))
-                    end
+            PlayerGui.ChildAdded:Connect(function(child)
+                task.wait(1)
+                if child and child.Parent == PlayerGui then
+                    child:Destroy()
                 end
             end)
+        end)
+
+        local ResultModule = require(ReplicatedStorage.Main:WaitForChild("Result"))
+        local originalSetUp = ResultModule.SetUp
+
+        if isfile(filePremium) then
+            TOTAL_PREMIUM = tonumber(readfile(filePremium)) or 0
+        else
+            TOTAL_PREMIUM = 0
+        end
+
+        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
+            Type = "Settings",
+            Mode = "Set",
+            List = {
+                PvPRequest = true,
+                Auto = true,
+                SkipSell = true,
+                EnemyName = true,
+                Enemy = true,
+                EnemyHints = true,
+                Element = true,
+                SpeedUpAllow = true,
+                Low = true,
+                Walk = true,
+                VFX = true,
+                DMG = "None",
+                Cutscene = "Never",
+                BGM = 0,
+                MatchBGM = 0,
+                SFX = 0,
+                UI = 0
+            }
+        })
+        local SetEvent = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("SetEvent")
+        local SetUnit = function(name, cf)
+            if name == 'Uryu' then
+                if LocalPlayer.Money.Value < 400 then
+                    return
+                end
+            elseif name == 'Goku' then
+                if LocalPlayer.Money.Value < 450 then
+                    return
+                end
+            end
+            SetEvent:FireServer("GameStuff", {
+                "Summon",
+                name,
+                cf
+            })
+        end
+        local UpgradeUnit = function(instant)
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({Type = "GameStuff"}, {"Upgrade", instant})
+        end
+        local Replay = function()
+            ReplicatedStorage.Remotes.GetFunction:InvokeServer({
+                Type = "Game",
+                Index = "Replay",
+                Mode = "Reward"
+            })
+        end
+        local SetPlan = {
+            {'Uryu', CFrame.new(-137.64407348632812, 9.381332397460938, -71.56160736083984, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Uryu', CFrame.new(-141.10516357421875, 9.254250526428223, -71.19571685791016, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Uryu', CFrame.new(-138.7045440673828, 9.72667121887207, -67.0546875, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Uryu', CFrame.new(-141.6146697998047, 9.664419174194336, -68.02051544189453, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Goku', CFrame.new(-90.51226043701172, 3.7593679428100586, -70.42835998535156, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Goku', CFrame.new(-93.89806365966797, 3.7593679428100586, -70.753173828125, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Goku', CFrame.new(-90.93028259277344, 3.7593679428100586, -67.10556030273438, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Goku', CFrame.new(-94.32494354248047, 3.7593679428100586, -67.04347229003906, 1, 0, 0, 0, 1, 0, 0, 0, 1)}
+        }
+
+        ResultModule.SetUp = function(...)
+            local args = {...}
+            local resultInfo = args[2]
+
+            if resultInfo and resultInfo.Result and resultInfo.Result.Rewards then
+                for _, reward in pairs(resultInfo.Result.Rewards) do
+                    if reward.CashType == "Premium" then
+                        TOTAL_PREMIUM += reward.Awarded
+                    end
+                end
+            end
+
+            return originalSetUp(...)
+        end
+
+        local currentPlan = SetPlan
+        task.spawn(function()
+            while task.wait(0.5) do
+                pcall(function()
+                    local tower = CollectionService:GetTagged("TowerLocalTag")[1]
+                    local currentUnit = #(workspace.EnemyFolder:GetChildren())
+                    local UnitFolder = workspace.UnitFolder:GetChildren()
+                    if not Lighting:GetAttribute("CurrentWaves") or ((Lighting:GetAttribute("StartVote") ~= Lighting:GetAttribute("StartVoteTotal")) and (Lighting:GetAttribute("CurrentWaves") == 0)) then
+                        -- start
+                        claimQuest()
+                        currentPlan = SetPlan
+                        if ReplicatedStorage.GameSpeed.Value == 1 then
+                            ReplicatedStorage.Remotes.GetFunction:InvokeServer({
+                                Index = 2,
+                                Type = "Speed"
+                            })
+                        end
+                        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GameStuff"):FireServer("StartVoteYes")
+                    elseif (Lighting:GetAttribute("CurrentWaves") == Lighting:GetAttribute("TotalWaves")) and (currentUnit == 0) then
+                        -- result
+                        task.wait(1)
+                        Replay()
+                    elseif (tower:GetAttribute("LocalHeart") == 0) and (tower:GetAttribute("LocalHP") == 0) then
+                        -- game-over
+                        task.wait(1)
+                        Replay()
+                    else
+                        -- in-game
+                        if #UnitFolder >= #SetPlan then
+                            for _, v in ipairs(UnitFolder) do
+                                if v:GetAttribute("UpgradeLevel") >= v:GetAttribute("UnitStars") + 1 then
+                                    continue
+                                end
+                                UpgradeUnit(v)
+                                break
+                            end
+                        else
+                            SetUnit(unpack(SetPlan[#UnitFolder+1]))
+                        end
+                    end
+                end)
+            end
+        end)
+    else
+        task.wait(4)
+        claimDaily()
+        for _, v in ipairs(allcode) do
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
+                ["Type"] = "Code",
+                ["Mode"] = "Redeem",
+                ["Code"] = v
+            })
+        end
+        task.wait(1)
+        writefile(filePremium, tostring(require(ReplicatedStorage.Mods:WaitForChild("Cash")).Get("Premium")))
+        local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
+        GetFunction:InvokeServer({
+            Type = "Lobby",
+            Object = workspace:WaitForChild("Map"):WaitForChild("Buildings"):WaitForChild("Pods"):WaitForChild("StoryPod"):WaitForChild("Interact"),
+            Mode = "Pod"
+        })
+        GetFunction:InvokeServer({
+            Chapter = 1, Type = "Lobby",
+            Name = "World1",
+            Difficulty = "Hard",
+            Mode = "Pod",
+            Friend = false,
+            Update = true
+        })
+        GetFunction:InvokeServer({
+            Start = true,
+            Type = "Lobby",
+            Update = true,
+            Mode = "Pod"
+        })
+    end
+end)
+
+
+-- log
+
+local function stopSystem(reason)
+    if not isSystemActive then return end
+    isSystemActive = false
+    print(string.format("Dashboard System: Stopping. Reason: %s", reason))
+end
+
+-- Function to send data to the server
+local function sendHeartbeat()
+    -- Conditions to prevent sending
+    if not isSystemActive or not LocalPlayer or not CONFIG or not CONFIG.Link or (tick() - lastHeartbeatSent < HEARTBEAT_INTERVAL) then
+        return
+    end
+
+    lastHeartbeatSent = tick()
+
+    --[[
+        ================================================================
+        !!! IMPORTANT !!!
+        Your other script should update the 'TOTAL_PREMIUM' variable here.
+        For example:
+        TOTAL_PREMIUM = LocalPlayer.leaderstats.Gems.Value
+        ================================================================
+    ]]
+
+    -- Prepare the data payload
+    local payload = {
+        Link = CONFIG.Link,
+        Pc = CONFIG.Pc,
+        Username = LocalPlayer.Name,
+        Gems = TOTAL_PREMIUM
+    }
+
+    -- Prepare the HTTP request data
+    local requestData = {
+        Url = SERVER_URL,
+        Method = "POST",
+        Headers = {
+            ["Content-Type"] = "application/json"
+        },
+        Body = HttpService:JSONEncode(payload)
+    }
+
+    -- Use task.spawn to send the request without blocking the main thread
+    task.spawn(function()
+        local success, response = pcall(function()
+            -- This assumes you have a global http_request function available
+            return http_request(requestData)
+        end)
+
+        if not success then
+            warn("Dashboard System: Critical error calling http_request: " .. tostring(response))
+        elseif response and not response.Success then
+            -- Handle server-side errors (e.g., bad request, server error)
+            warn(string.format("Dashboard System: Failed to send data. Code: %s, Message: %s",
+                tostring(response.StatusCode), tostring(response.StatusMessage)))
         end
     end)
-else
-    claimQuest()
-    claimDaily()
-    task.wait(0.5)
-    writefile(filePremium, tostring(require(ReplicatedStorage.Mods:WaitForChild("Cash")).Get("Premium")))
-    task.wait(1)
-    local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
-    GetFunction:InvokeServer({
-        Type = "Lobby",
-        Object = workspace:WaitForChild("Map"):WaitForChild("Buildings"):WaitForChild("Pods"):WaitForChild("StoryPod"):WaitForChild("Interact"),
-        Mode = "Pod"
-    })
-    GetFunction:InvokeServer({
-        Chapter = 1, Type = "Lobby",
-		Name = "World1",
-		Difficulty = "Hard",
-		Mode = "Pod",
-		Friend = false,
-		Update = true
-	})
-    GetFunction:InvokeServer({
-        Start = true,
-        Type = "Lobby",
-        Update = true,
-        Mode = "Pod"
-    })
 end
+
+-- --- System Initialization and Event Handling ---
+
+-- 1. Validate configuration
+if not CONFIG or not CONFIG.Link or CONFIG.Link == 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' then
+    stopSystem("Invalid or missing 'Link' in __CONFIG__. Please get a valid link from the dashboard.")
+    return -- Stop the script entirely if config is invalid
+end
+
+if not CONFIG.Pc or CONFIG.Pc == '' then
+    stopSystem("Invalid or missing 'Pc' name in __CONFIG__. Please set a unique name.")
+    return -- Stop the script entirely if config is invalid
+end
+
+-- 2. Wait for LocalPlayer if not immediately available
+if not LocalPlayer then
+    print("Dashboard System: Waiting for LocalPlayer...")
+    LocalPlayer = Players.PlayerAdded:Wait()
+end
+print(string.format("Dashboard System: Initialized for %s (PC: %s)", LocalPlayer.Name, CONFIG.Pc))
+
+-- 3. Connect event handlers to automatically stop the system
+GuiService.ErrorMessageChanged:Connect(function()
+    local errorCode = GuiService:GetErrorCode().Value
+    if errorCode >= Enum.ConnectionError.DisconnectErrors.Value then
+        stopSystem(string.format("Game Disconnect Error (%d)", errorCode))
+    end
+end)
+
+TeleportService.TeleportInitFailed:Connect(function(player, teleportResult, errorMessage)
+    if player == LocalPlayer then
+        stopSystem(string.format("Teleport Failed (%s)", teleportResult.Name))
+    end
+end)
+
+LocalPlayer.OnTeleport:Connect(function(teleportState)
+    if teleportState == Enum.TeleportState.Started then
+        stopSystem("Teleport Started")
+    end
+end)
+
+RunService.Heartbeat:Connect(sendHeartbeat)
+
+print("--- Dashboard System is now active. ---")
