@@ -20,6 +20,10 @@ local GuiService = game:GetService("GuiService")
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
+while not LocalPlayer:GetAttribute("LoadCompleted") do task.wait() end
+
+local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
+
 local filePremium = "nnm-premium-"..LocalPlayer.Name..".txt"
 local allcode = {"superdaydaykid100ksubs", "sbrupdate", "omgupdate2024", "animecardbattle", "blamspot500kcodeunitrelease", "egoupdate", "fraudkunaupdate"}
 
@@ -111,86 +115,85 @@ end)
 
 --
 
-task.spawn(function()
+local function OptimizeGamePerformance_Nuclear()
+    print("WARNING: EXECUTING NUCLEAR PERFORMANCE OPTIMIZATION...")
 
-    while not LocalPlayer:GetAttribute("LoadCompleted") do task.wait() end
+    local Workspace = game:GetService("Workspace")
+    local Lighting = game:GetService("Lighting")
+    local RunService = game:GetService("RunService")
+    local StarterGui = game:GetService("StarterGui")
+    local Debris = game:GetService("Debris")
 
-    --
-    local function OptimizeGamePerformance_Nuclear()
-        print("WARNING: EXECUTING NUCLEAR PERFORMANCE OPTIMIZATION...")
+    local thisScript = script
 
-        local Workspace = game:GetService("Workspace")
-        local Lighting = game:GetService("Lighting")
-        local RunService = game:GetService("RunService")
-        local StarterGui = game:GetService("StarterGui")
-        local Debris = game:GetService("Debris")
+    pcall(function()
+        settings().Rendering.GraphicsMode = Enum.GraphicsMode.NoGraphics
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+    end)
 
-        local thisScript = script
+    Lighting:ClearAllChildren()
+    Lighting.Technology = Enum.Technology.Compatibility
+    Lighting.GlobalShadows = false
+    Lighting.Brightness = 0
+    Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
+    Lighting.EnvironmentSpecularScale = 0
+    Lighting.EnvironmentDiffuseScale = 0
 
+    local function optimizeOrDestroyObject(obj)
         pcall(function()
-            settings().Rendering.GraphicsMode = Enum.GraphicsMode.NoGraphics
-            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-            StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+            if obj:IsA("BasePart") then
+                obj.Anchored = true
+                obj.Transparency = 1
+                obj.CanCollide = false
+                obj.CastShadow = false
+
+            elseif (obj:IsA("Script") or obj:IsA("LocalScript")) and obj ~= thisScript then
+                obj.Disabled = true
+
+            elseif obj:IsA("Humanoid") then
+                local animator = obj:FindFirstChildOfClass("Animator")
+                if animator then
+                    animator:Destroy()
+                end
+                obj.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+
+            elseif obj:IsA("Decal") or obj:IsA("Texture") or obj:IsA("SurfaceGui")
+                or obj:IsA("BillboardGui") or obj:IsA("ParticleEmitter") or obj:IsA("Trail")
+                or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")
+                or obj:IsA("Sound") or obj:IsA("Light") or obj:IsA("PostEffect")
+                or obj:IsA("Atmosphere") or obj:IsA("Sky") or obj:IsA("Clothing")
+                or obj:IsA("Accessory") or obj:IsA("BodyColors") then
+                obj:Destroy()
+            end
         end)
+    end
 
-        Lighting:ClearAllChildren()
-        Lighting.Technology = Enum.Technology.Compatibility
-        Lighting.GlobalShadows = false
-        Lighting.Brightness = 0
-        Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
-        Lighting.EnvironmentSpecularScale = 0
-        Lighting.EnvironmentDiffuseScale = 0
-
-        local function optimizeOrDestroyObject(obj)
-            pcall(function()
-                if obj:IsA("BasePart") then
-                    obj.Anchored = true
-                    obj.Transparency = 1
-                    obj.CanCollide = false
-                    obj.CastShadow = false
-
-                elseif (obj:IsA("Script") or obj:IsA("LocalScript")) and obj ~= thisScript then
-                    obj.Disabled = true
-
-                elseif obj:IsA("Humanoid") then
-                    local animator = obj:FindFirstChildOfClass("Animator")
-                    if animator then
-                        animator:Destroy()
-                    end
-                    obj.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-
-                elseif obj:IsA("Decal") or obj:IsA("Texture") or obj:IsA("SurfaceGui")
-                    or obj:IsA("BillboardGui") or obj:IsA("ParticleEmitter") or obj:IsA("Trail")
-                    or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")
-                    or obj:IsA("Sound") or obj:IsA("Light") or obj:IsA("PostEffect")
-                    or obj:IsA("Atmosphere") or obj:IsA("Sky") or obj:IsA("Clothing")
-                    or obj:IsA("Accessory") or obj:IsA("BodyColors") then
-                    obj:Destroy()
-                end
-            end)
-        end
-
-        local function executePurge()
-            print("Executing workspace purge...")
-            for _, descendant in ipairs(Workspace:GetDescendants()) do
-                if descendant.Parent then
-                    optimizeOrDestroyObject(descendant)
-                end
+    local function executePurge()
+        print("Executing workspace purge...")
+        for _, descendant in ipairs(Workspace:GetDescendants()) do
+            if descendant.Parent then
+                optimizeOrDestroyObject(descendant)
             end
         end
-
-        executePurge()
     end
-    --[[
-    task.spawn(function()
-        while task.wait(2) do
-            RunService:Set3dRenderingEnabled(true)
-            task.wait()
-            RunService:Set3dRenderingEnabled(false)
-        end
-    end)]]
-    pcall(OptimizeGamePerformance_Nuclear)
-    --
+
+    executePurge()
+end
+--[[
+task.spawn(function()
+    while task.wait(2) do
+        RunService:Set3dRenderingEnabled(true)
+        task.wait()
+        RunService:Set3dRenderingEnabled(false)
+    end
+end)]]
+
+pcall(OptimizeGamePerformance_Nuclear)
+
+--
+
+task.spawn(function()
 
     local QuestMod = require(ReplicatedStorage:WaitForChild("Mods"):WaitForChild("QuestMod"))
     local claimQuest = function()
@@ -256,12 +259,11 @@ task.spawn(function()
 
     if workspace:GetAttribute("Gameplay") then
 
-        task.spawn(function()
-            task.wait(20)
-            if #(workspace.UnitFolder:GetChildren()) == 0 then
-                TeleportService:Teleport(game.PlaceId, LocalPlayer)
-            end
-        end)
+        if isfile(filePremium) then
+            TOTAL_PREMIUM = tonumber(readfile(filePremium)) or 0
+        else
+            TOTAL_PREMIUM = 0
+        end
 
         task.spawn(function()
             task.wait(10)
@@ -284,13 +286,7 @@ task.spawn(function()
         local ResultModule = require(ReplicatedStorage.Main:WaitForChild("Result"))
         local originalSetUp = ResultModule.SetUp
 
-        if isfile(filePremium) then
-            TOTAL_PREMIUM = tonumber(readfile(filePremium)) or 0
-        else
-            TOTAL_PREMIUM = 0
-        end
-
-        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
+        GetFunction:InvokeServer({
             Type = "Settings",
             Mode = "Set",
             List = {
@@ -331,10 +327,10 @@ task.spawn(function()
             })
         end
         local UpgradeUnit = function(instant)
-            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({Type = "GameStuff"}, {"Upgrade", instant})
+            GetFunction:InvokeServer({Type = "GameStuff"}, {"Upgrade", instant})
         end
         local Replay = function()
-            ReplicatedStorage.Remotes.GetFunction:InvokeServer({
+            GetFunction:InvokeServer({
                 Type = "Game",
                 Index = "Replay",
                 Mode = "Reward"
@@ -378,7 +374,7 @@ task.spawn(function()
                         claimQuest()
                         currentPlan = SetPlan
                         if ReplicatedStorage.GameSpeed.Value == 1 then
-                            ReplicatedStorage.Remotes.GetFunction:InvokeServer({
+                            GetFunction:InvokeServer({
                                 Index = 2,
                                 Type = "Speed"
                             })
@@ -410,16 +406,16 @@ task.spawn(function()
             end
         end)
     else
+        TOTAL_PREMIUM = require(ReplicatedStorage.Mods:WaitForChild("Cash")).Get("Premium")
         claimDaily()
         for _, v in ipairs(allcode) do
-            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
+            GetFunction:InvokeServer({
                 ["Type"] = "Code",
                 ["Mode"] = "Redeem",
                 ["Code"] = v
             })
         end
-        writefile(filePremium, tostring(require(ReplicatedStorage.Mods:WaitForChild("Cash")).Get("Premium")))
-        local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
+        writefile(filePremium, tostring(TOTAL_PREMIUM))
         GetFunction:InvokeServer({
             Type = "Lobby",
             Object = workspace:WaitForChild("Map"):WaitForChild("Buildings"):WaitForChild("Pods"):WaitForChild("StoryPod"):WaitForChild("Interact"),
@@ -468,13 +464,24 @@ local function sendHeartbeat()
         TOTAL_PREMIUM = LocalPlayer.leaderstats.Gems.Value
         ================================================================
     ]]
+    local TOTAL_REROLL
+    for _, itemInfo in ipairs(GetFunction:InvokeServer({["Type"] = "Inventory", ["Mode"] = "Get"})) do
+        if itemInfo.Name == "Trait Burner" then
+            TOTAL_REROLL = itemInfo.Amount
+            break
+        end
+    end
+    if not TOTAL_REROLL then
+        TOTAL_REROLL = 0
+    end
 
     -- Prepare the data payload
     local payload = {
         Link = CONFIG.Link,
         Pc = CONFIG.Pc,
         Username = LocalPlayer.Name,
-        Gems = TOTAL_PREMIUM
+        Gems = TOTAL_PREMIUM,
+        Reroll = TOTAL_REROLL
     }
 
     -- Prepare the HTTP request data
