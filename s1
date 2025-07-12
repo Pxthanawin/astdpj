@@ -1,312 +1,550 @@
-local CollectionService = game:GetService("CollectionService")
+-- --- Core Settings ---
+local SERVER_URL = "http://pptnw.3bbddns.com:14420/heartbeat"
+local HEARTBEAT_INTERVAL = 3
+local CONFIG = __CONFIG__
+
+local isSystemActive = true
+local lastHeartbeatSent = 0
+local TOTAL_PREMIUM
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+local Lighting = game:GetService("Lighting")
+local CollectionService = game:GetService("CollectionService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local TeleportService = game:GetService("TeleportService")
+local GuiService = game:GetService("GuiService")
 
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
-local leaderstats = LocalPlayer:WaitForChild("leaderstats")
-local Sheckles = leaderstats:WaitForChild("Sheckles")
-local Backpack = LocalPlayer:WaitForChild("Backpack")
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-local Modules = ReplicatedStorage:WaitForChild("Modules")
-local Data = ReplicatedStorage:WaitForChild("Data")
+local filePremium = "nnm-premium-"..LocalPlayer.Name..".txt"
+local allcode = {"superdaydaykid100ksubs", "sbrupdate", "omgupdate2024", "animecardbattle", "blamspot500kcodeunitrelease", "egoupdate", "fraudkunaupdate"}
 
-local DataService = require(Modules:WaitForChild("DataService"))
-local CountDictionary = require(Modules:WaitForChild("CountDictionary"))
-local SeedData = require(Data:WaitForChild("SeedData"))
-local GrowableData = require(Data:WaitForChild("GrowableData"))
+local VirtualUser = game:service("VirtualUser")
+LocalPlayer.Idled:connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
 
-local myFarm
-repeat
-    task.wait(1)
-    for _, Farm in ipairs(workspace.Farm:GetChildren()) do
-        if Farm:FindFirstChild("Important") and Farm.Important:FindFirstChild("Data") and Farm.Important.Data:FindFirstChild("Owner") and Farm.Important.Data.Owner.Value == LocalPlayer.Name then
-            myFarm = Farm
-            break
+local mainGui = Instance.new("ScreenGui")
+mainGui.Name = "CustomOverlayGui"
+mainGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+mainGui.ResetOnSpawn = false
+mainGui.IgnoreGuiInset = true
+mainGui.Parent = CoreGui
+
+local backgroundFrame = Instance.new("Frame")
+backgroundFrame.Name = "Background"
+backgroundFrame.Size = UDim2.new(1, 0, 1, 0)
+backgroundFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+backgroundFrame.BackgroundTransparency = 0.5
+backgroundFrame.BorderSizePixel = 0
+backgroundFrame.Parent = mainGui
+
+local centerContainer = Instance.new("Frame")
+centerContainer.Name = "CenterContainer"
+centerContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+centerContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
+centerContainer.Size = UDim2.new(0.4, 0, 0.2, 0)
+centerContainer.BackgroundTransparency = 1
+centerContainer.Parent = backgroundFrame
+
+local aspectRatio = Instance.new("UIAspectRatioConstraint")
+aspectRatio.AspectRatio = 2
+aspectRatio.DominantAxis = Enum.DominantAxis.Width
+aspectRatio.Parent = centerContainer
+
+local itemRowLayout = Instance.new("UIListLayout")
+itemRowLayout.FillDirection = Enum.FillDirection.Horizontal
+itemRowLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+itemRowLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+itemRowLayout.SortOrder = Enum.SortOrder.LayoutOrder
+itemRowLayout.Padding = UDim.new(0.05, 0)
+itemRowLayout.Parent = centerContainer
+
+local itemImage = Instance.new("ImageLabel")
+itemImage.Name = "ItemImage"
+itemImage.Size = UDim2.new(0.4, 0, 0.8, 0)
+itemImage.BackgroundTransparency = 1
+itemImage.Image = "rbxassetid://14511803600"
+itemImage.ScaleType = Enum.ScaleType.Fit
+itemImage.LayoutOrder = 1
+itemImage.Parent = centerContainer
+
+local nameLabel = Instance.new("TextLabel")
+nameLabel.Name = "PlayerName"
+nameLabel.Size = UDim2.new(0, 300, 0, 40)
+nameLabel.AnchorPoint = Vector2.new(1, 1)
+nameLabel.Position = UDim2.new(1, -20, 1, -20)
+nameLabel.BackgroundTransparency = 1
+nameLabel.TextColor3 = Color3.new(1, 1, 1)
+nameLabel.Font = Enum.Font.GothamBold
+nameLabel.TextScaled = true
+nameLabel.TextXAlignment = Enum.TextXAlignment.Right
+nameLabel.Text = "Username: " .. LocalPlayer.Name
+nameLabel.Parent = backgroundFrame
+
+local itemCountLabel = Instance.new("TextLabel")
+itemCountLabel.Name = "ItemCount"
+itemCountLabel.Size = UDim2.new(0.5, 0, 1, 0)
+itemCountLabel.BackgroundTransparency = 1
+itemCountLabel.TextColor3 = Color3.new(1, 1, 1)
+itemCountLabel.Font = Enum.Font.GothamBold
+itemCountLabel.TextScaled = true
+itemCountLabel.TextXAlignment = Enum.TextXAlignment.Left
+itemCountLabel.Text = (TOTAL_PREMIUM and tostring(TOTAL_PREMIUM)) or "Loading Data"
+itemCountLabel.LayoutOrder = 2
+itemCountLabel.Parent = centerContainer
+
+task.spawn(function()
+    local currentdp
+    while task.wait(1) do
+        if TOTAL_PREMIUM ~= currentdp then
+            currentdp = TOTAL_PREMIUM
+            itemCountLabel.Text = (TOTAL_PREMIUM and tostring(TOTAL_PREMIUM)) or "Loading Data"
         end
     end
-until myFarm
+end)
 
-local tppoint = {
-    Garden = myFarm.Spawn_Point.Position,
-    Seed = workspace.Tutorial_Points.Tutorial_Point_1.Position,
-    Sell = workspace.Tutorial_Points.Tutorial_Point_2.Position,
-    Gear = workspace.Tutorial_Points.Tutorial_Point_3.Position,
-    Eggs = workspace.Tutorial_Points.Tutorial_Point_4.Position
-}
+--
 
-local plantFruitCache = {}
-local plantHaveFruit = function(plant)
-    local plantName = plant.Name
-    if plantFruitCache[plantName] == nil then
-        local plantData = GrowableData.GetDataForPlant(nil, plant)
-        plantFruitCache[plantName] = not not (plantData and plantData.GrowFruitTime)
-    end
-    return plantFruitCache[plantName]
-end
+local function OptimizeGamePerformance_Nuclear()
+    print("WARNING: EXECUTING NUCLEAR PERFORMANCE OPTIMIZATION...")
 
-local buying = false
-local buySeed = function()
-    if buying then return end
-    buying = true
-    while true do
-        local money = Sheckles.Value
-        local bestSeed
-        local getdata = DataService:GetData()
-        if not getdata then return end
-        local stocks = getdata.SeedStock.Stocks
-        for seedname, stockdata in pairs(stocks) do
-            --[[if table.find(BuySeeds, seedname) and stockdata.Stock > 0 then
-                if money >= SeedData[seedname].Price and (not bestSeed or SeedData[seedname].Price > SeedData[bestSeed].Price) then
-                    bestSeed = seedname
+    local Workspace = game:GetService("Workspace")
+    local Lighting = game:GetService("Lighting")
+    local RunService = game:GetService("RunService")
+    local StarterGui = game:GetService("StarterGui")
+    local Debris = game:GetService("Debris")
+
+    local thisScript = script
+
+    pcall(function()
+        settings().Rendering.GraphicsMode = Enum.GraphicsMode.NoGraphics
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+    end)
+
+    Lighting:ClearAllChildren()
+    Lighting.Technology = Enum.Technology.Compatibility
+    Lighting.GlobalShadows = false
+    Lighting.Brightness = 0
+    Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
+    Lighting.EnvironmentSpecularScale = 0
+    Lighting.EnvironmentDiffuseScale = 0
+
+    local function optimizeOrDestroyObject(obj)
+        pcall(function()
+            if obj:IsA("BasePart") then
+                obj.Anchored = true
+                obj.Transparency = 1
+                obj.CanCollide = false
+                obj.CastShadow = false
+
+            elseif (obj:IsA("Script") or obj:IsA("LocalScript")) and obj ~= thisScript then
+                obj.Disabled = true
+
+            elseif obj:IsA("Humanoid") then
+                local animator = obj:FindFirstChildOfClass("Animator")
+                if animator then
+                    animator:Destroy()
                 end
-            end]]
-            if stockdata.Stock > 0 and money >= SeedData[seedname].Price and (not bestSeed or SeedData[seedname].Price > SeedData[bestSeed].Price) then
-                bestSeed = seedname
+                obj.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+
+            elseif obj:IsA("Decal") or obj:IsA("Texture") or obj:IsA("SurfaceGui")
+                or obj:IsA("BillboardGui") or obj:IsA("ParticleEmitter") or obj:IsA("Trail")
+                or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")
+                or obj:IsA("Sound") or obj:IsA("Light") or obj:IsA("PostEffect")
+                or obj:IsA("Atmosphere") or obj:IsA("Sky") or obj:IsA("Clothing")
+                or obj:IsA("Accessory") or obj:IsA("BodyColors") then
+                obj:Destroy()
+            end
+        end)
+    end
+
+    local function executePurge()
+        print("Executing workspace purge...")
+        for _, descendant in ipairs(Workspace:GetDescendants()) do
+            if descendant.Parent then
+                optimizeOrDestroyObject(descendant)
             end
         end
-        if bestSeed then
-            ReplicatedStorage.GameEvents.BuySeedStock:FireServer(bestSeed)
-            task.wait(0.1)
-        else
-            break
-        end
-    end
-    buying = false
-end
-
-local PlantSeed = function(obj)
-    local randomPos_D = function()
-        local Can_Plant = myFarm.Important.Plant_Locations:GetChildren()[math.random(1,2)]
-        local size = Can_Plant.Size
-        local pos = Can_Plant.Position
-
-        local halfSizeX = size.X / 2
-        local halfSizeZ = size.Z / 2
-
-        local randomX = pos.X + (math.random() * 2 - 1) * halfSizeX
-        local randomZ = pos.Z + (math.random() * 2 - 1) * halfSizeZ
-
-        return vector.create(randomX, 0.13552704453468323, randomZ)
-    end
-    local randomPos_G = function()
-        local Can_Plant = myFarm.Important.Plant_Locations:GetChildren()[math.random(1,2)]
-        local size = Can_Plant.Size
-        local pos = Can_Plant.Position
-
-        local gapWidth = 21
-        local sideWidth = (size.X - gapWidth) / 2
-        local SidePos = {
-            pos - Vector3.new((gapWidth / 2) + (sideWidth / 2), 0, 0),
-            pos + Vector3.new((gapWidth / 2) + (sideWidth / 2), 0, 0)
-        }
-
-        local chosenSidePos = SidePos[math.random(1,2)]
-
-        local halfSizeX = sideWidth / 2
-        local halfSizeZ = size.Z / 2
-
-        local randomX = chosenSidePos.X + (math.random() * 2 - 1) * halfSizeX
-        local randomZ = chosenSidePos.Z + (math.random() * 2 - 1) * halfSizeZ
-
-        return vector.create(randomX, 0.13552704453468323, randomZ)
     end
 
-    local Seed = obj:IsA("Tool") and obj:GetAttribute("Seed")
-    if not Seed then return end
-    LocalPlayer.Character.Humanoid:EquipTool(obj)
-    if obj.Parent ~= LocalPlayer.Character and #myFarm.Important.Plants_Physical >= 800 then return end
-    LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(tppoint.Garden.X, LocalPlayer.Character.HumanoidRootPart.Position.Y, tppoint.Garden.Z)
-    ReplicatedStorage.GameEvents.Plant_RE:FireServer(randomPos_G(), Seed)
-    --[[
-    LocalPlayer.Character.Humanoid:UnequipTools()
-    for _, v in ipairs(Backpack:GetChildren()) do
-        local Seed = v:IsA("Tool") and v:GetAttribute("Seed")
-        if not Seed then continue end
-        if table.find(PlantingSeeds, Seed) then
-            LocalPlayer.Character.Humanoid:EquipTool(v)
-            while v.Parent == LocalPlayer.Character and #myFarm.Important.Plants_Physical <= 800 do
-                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(tppoint.Garden.X, LocalPlayer.Character.HumanoidRootPart.Position.Y, tppoint.Garden.Z)
-                ReplicatedStorage.GameEvents.Plant_RE:FireServer(randomPos_G(), Seed)
-                task.wait(0.1)
-            end
-        end
-    end]]
+    executePurge()
 end
-local PlantAllSeed = function()
-    LocalPlayer.Character.Humanoid:UnequipTools()
-    for _, v in ipairs(Backpack:GetChildren()) do
-        PlantSeed(v)
-        task.wait(0.1)
+--[[
+task.spawn(function()
+    while task.wait(2) do
+        RunService:Set3dRenderingEnabled(true)
+        task.wait()
+        RunService:Set3dRenderingEnabled(false)
     end
-end
+end)]]
 
-local CollectPlant = function(model)
-    ReplicatedStorage.ByteNetReliable:FireServer(buffer.fromstring("\001\001\000\001"), {model})
-end
-local autoCollectPlant = function()
-    while task.wait(15) do
-        local getdata = DataService:GetData()
-        if not (getdata and getdata.InventoryData) then return end
-        local holdableItems = {}
-        for uuid, itemData in pairs(getdata.InventoryData) do
-            if itemData.ItemType == "Holdable" then
-                holdableItems[uuid] = itemData
-            end
-        end
-        local maxCapacity = 200 + (LocalPlayer:GetAttribute("BonusBackpackSize") or 0)
-        local currentCapacity = maxCapacity - CountDictionary(holdableItems)
-        if currentCapacity > 0 then
-            for _, plant in ipairs(myFarm.Important.Plants_Physical:GetChildren()) do
-                if currentCapacity <= 0 then break end
-                if plant:FindFirstChild("Grow") and (plant.Grow.Age.Value < plant:GetAttribute("MaxAge")) then continue end
-                if plantHaveFruit(plant) then
-                    if plant:FindFirstChild("Fruits") then
-                        for _, fruit in ipairs(plant.Fruits:GetChildren()) do
-                            if fruit:FindFirstChild("Grow") and (fruit.Grow.Age.Value < fruit:GetAttribute("MaxAge")) then continue end
-                            CollectPlant(fruit)
-                            currentCapacity -= 1
+--
+
+local QuestMod = require(ReplicatedStorage:WaitForChild("Mods"):WaitForChild("QuestMod"))
+local claimQuest = function()
+    local allQuestsData = QuestMod.Get()
+    if not allQuestsData then return end
+    local totalRewards = {}
+    for questType, questGroup in pairs(allQuestsData) do
+        if questGroup and questGroup.Quests then
+            for _, questInfo in pairs(questGroup.Quests) do
+                if questInfo.Progress >= questInfo.Goal and not questInfo.Completed then
+                    local claimResult = QuestMod.Claim(questType, questInfo.Key)
+                    if claimResult and claimResult.Rewards then
+                        for _, rewardData in pairs(claimResult.Rewards) do
+                            table.insert(totalRewards, rewardData)
                         end
                     end
-                else
-                    LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(tppoint.Sell.X, LocalPlayer.Character.HumanoidRootPart.Position.Y, tppoint.Sell.Z)
-                    CollectPlant(plant)
                 end
             end
         end
-        if Sheckles.Value < 10000 then
-            ReplicatedStorage.GameEvents.Sell_Inventory:FireServer()
+    end
+    if totalRewards and #totalRewards > 0 then
+        local summarizedRewards = {}
+        for _, reward in pairs(totalRewards) do
+            local key = reward.DisplayName or reward.Name or reward.CashType or "Unknown"
+            local amount = reward.Awarded or reward.Amount or 1
+
+            if summarizedRewards[key] then
+                summarizedRewards[key] = summarizedRewards[key] + amount
+            else
+                summarizedRewards[key] = amount
+            end
+        end
+        --[[
+        for name, amount in pairs(summarizedRewards) do
+            print(string.format("  - %s: %s", name, amount))
+        end]]
+        if TOTAL_PREMIUM and summarizedRewards["Premium"] then
+            TOTAL_PREMIUM += summarizedRewards["Premium"]
         end
     end
 end
 
-if "MAIN" then
-    Sheckles.Changed:Connect(buySeed)
-    DataService:GetPathSignal("SeedStock"):Connect(function(v)
-        if v == 'Stocks' then
-            buySeed()
+local DailyRewardMod = require(ReplicatedStorage:WaitForChild("Mods"):WaitForChild("DailyMod"))
+local claimDaily = function()
+    local rewardStatus = DailyRewardMod.Get()
+    if not rewardStatus then return end
+    if not rewardStatus.Claimed then
+        local dayToClaim = rewardStatus.Streak + 1
+        if rewardStatus.Rewards and rewardStatus.Rewards[dayToClaim] then
+            local rewardInfo = rewardStatus.Rewards[dayToClaim][1]
+            if rewardInfo then
+                local rewardName = rewardInfo.DisplayName or rewardInfo.Name or rewardInfo.CashType or "Unknown Reward"
+                local rewardAmount = rewardInfo.Amount or 1
+                if TOTAL_PREMIUM and rewardName == 'Premium' then
+                    TOTAL_PREMIUM += rewardAmount
+                end
+            end
+        end
+        DailyRewardMod.Claim()
+    end
+end
+
+task.spawn(function()
+    if workspace:GetAttribute("Gameplay") then
+
+        task.wait(4)
+        task.spawn(function()
+            task.wait(20)
+            if #(workspace.UnitFolder:GetChildren()) == 0 then
+                TeleportService:Teleport(game.PlaceId, LocalPlayer)
+            end
+        end)
+
+        pcall(OptimizeGamePerformance_Nuclear)
+
+        task.spawn(function()
+            task.wait(10)
+            for _, v in ipairs(PlayerGui:GetChildren()) do
+                if table.find({"GU", "MainUI", "MainUI2"}, v.Name) then
+                    --v.Enabled = false
+                else
+                    v:Destroy()
+                end
+            end
+
+            PlayerGui.ChildAdded:Connect(function(child)
+                task.wait(1)
+                if child and child.Parent == PlayerGui then
+                    child:Destroy()
+                end
+            end)
+        end)
+
+        local ResultModule = require(ReplicatedStorage.Main:WaitForChild("Result"))
+        local originalSetUp = ResultModule.SetUp
+
+        if isfile(filePremium) then
+            TOTAL_PREMIUM = tonumber(readfile(filePremium)) or 0
+        else
+            TOTAL_PREMIUM = 0
+        end
+
+        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
+            Type = "Settings",
+            Mode = "Set",
+            List = {
+                PvPRequest = true,
+                Auto = true,
+                SkipSell = true,
+                EnemyName = true,
+                Enemy = true,
+                EnemyHints = true,
+                Element = true,
+                SpeedUpAllow = true,
+                Low = true,
+                Walk = true,
+                VFX = true,
+                DMG = "None",
+                Cutscene = "Never",
+                BGM = 0,
+                MatchBGM = 0,
+                SFX = 0,
+                UI = 0
+            }
+        })
+        local SetEvent = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("SetEvent")
+        local SetUnit = function(name, cf)
+            if name == 'Uryu' then
+                if LocalPlayer.Money.Value < 400 then
+                    return
+                end
+            elseif name == 'Goku' then
+                if LocalPlayer.Money.Value < 450 then
+                    return
+                end
+            end
+            SetEvent:FireServer("GameStuff", {
+                "Summon",
+                name,
+                cf
+            })
+        end
+        local UpgradeUnit = function(instant)
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({Type = "GameStuff"}, {"Upgrade", instant})
+        end
+        local Replay = function()
+            ReplicatedStorage.Remotes.GetFunction:InvokeServer({
+                Type = "Game",
+                Index = "Replay",
+                Mode = "Reward"
+            })
+        end
+        local SetPlan = {
+            {'Uryu', CFrame.new(-137.64407348632812, 9.381332397460938, -71.56160736083984, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Uryu', CFrame.new(-141.10516357421875, 9.254250526428223, -71.19571685791016, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Uryu', CFrame.new(-138.7045440673828, 9.72667121887207, -67.0546875, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Uryu', CFrame.new(-141.6146697998047, 9.664419174194336, -68.02051544189453, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Goku', CFrame.new(-90.51226043701172, 3.7593679428100586, -70.42835998535156, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Goku', CFrame.new(-93.89806365966797, 3.7593679428100586, -70.753173828125, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Goku', CFrame.new(-90.93028259277344, 3.7593679428100586, -67.10556030273438, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+            {'Goku', CFrame.new(-94.32494354248047, 3.7593679428100586, -67.04347229003906, 1, 0, 0, 0, 1, 0, 0, 0, 1)}
+        }
+
+        ResultModule.SetUp = function(...)
+            local args = {...}
+            local resultInfo = args[2]
+
+            if resultInfo and resultInfo.Result and resultInfo.Result.Rewards then
+                for _, reward in pairs(resultInfo.Result.Rewards) do
+                    if reward.CashType == "Premium" then
+                        TOTAL_PREMIUM += reward.Awarded
+                    end
+                end
+            end
+
+            return originalSetUp(...)
+        end
+
+        local currentPlan = SetPlan
+        task.spawn(function()
+            while task.wait(0.5) do
+                pcall(function()
+                    local tower = CollectionService:GetTagged("TowerLocalTag")[1]
+                    local currentUnit = #(workspace.EnemyFolder:GetChildren())
+                    local UnitFolder = workspace.UnitFolder:GetChildren()
+                    if not Lighting:GetAttribute("CurrentWaves") or ((Lighting:GetAttribute("StartVote") ~= Lighting:GetAttribute("StartVoteTotal")) and (Lighting:GetAttribute("CurrentWaves") == 0)) then
+                        -- start
+                        claimQuest()
+                        currentPlan = SetPlan
+                        if ReplicatedStorage.GameSpeed.Value == 1 then
+                            ReplicatedStorage.Remotes.GetFunction:InvokeServer({
+                                Index = 2,
+                                Type = "Speed"
+                            })
+                        end
+                        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GameStuff"):FireServer("StartVoteYes")
+                    elseif (Lighting:GetAttribute("CurrentWaves") == Lighting:GetAttribute("TotalWaves")) and (currentUnit == 0) then
+                        -- result
+                        task.wait(1)
+                        Replay()
+                    elseif (tower:GetAttribute("LocalHeart") == 0) and (tower:GetAttribute("LocalHP") == 0) then
+                        -- game-over
+                        task.wait(1)
+                        Replay()
+                    else
+                        -- in-game
+                        if #UnitFolder >= #SetPlan then
+                            for _, v in ipairs(UnitFolder) do
+                                if v:GetAttribute("UpgradeLevel") >= v:GetAttribute("UnitStars") + 1 then
+                                    continue
+                                end
+                                UpgradeUnit(v)
+                                break
+                            end
+                        else
+                            SetUnit(unpack(SetPlan[#UnitFolder+1]))
+                        end
+                    end
+                end)
+            end
+        end)
+    else
+        pcall(OptimizeGamePerformance_Nuclear)
+        task.wait(4)
+        claimDaily()
+        for _, v in ipairs(allcode) do
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction"):InvokeServer({
+                ["Type"] = "Code",
+                ["Mode"] = "Redeem",
+                ["Code"] = v
+            })
+        end
+        task.wait(1)
+        writefile(filePremium, tostring(require(ReplicatedStorage.Mods:WaitForChild("Cash")).Get("Premium")))
+        local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
+        GetFunction:InvokeServer({
+            Type = "Lobby",
+            Object = workspace:WaitForChild("Map"):WaitForChild("Buildings"):WaitForChild("Pods"):WaitForChild("StoryPod"):WaitForChild("Interact"),
+            Mode = "Pod"
+        })
+        GetFunction:InvokeServer({
+            Chapter = 1, Type = "Lobby",
+            Name = "World1",
+            Difficulty = "Hard",
+            Mode = "Pod",
+            Friend = false,
+            Update = true
+        })
+        GetFunction:InvokeServer({
+            Start = true,
+            Type = "Lobby",
+            Update = true,
+            Mode = "Pod"
+        })
+    end
+end)
+
+
+-- log
+
+local function stopSystem(reason)
+    if not isSystemActive then return end
+    isSystemActive = false
+    print(string.format("Dashboard System: Stopping. Reason: %s", reason))
+end
+
+-- Function to send data to the server
+local function sendHeartbeat()
+    -- Conditions to prevent sending
+    if not isSystemActive or not LocalPlayer or not CONFIG or not CONFIG.Link or (tick() - lastHeartbeatSent < HEARTBEAT_INTERVAL) then
+        return
+    end
+
+    lastHeartbeatSent = tick()
+
+    --[[
+        ================================================================
+        !!! IMPORTANT !!!
+        Your other script should update the 'TOTAL_PREMIUM' variable here.
+        For example:
+        TOTAL_PREMIUM = LocalPlayer.leaderstats.Gems.Value
+        ================================================================
+    ]]
+
+    -- Prepare the data payload
+    local payload = {
+        Link = CONFIG.Link,
+        Pc = CONFIG.Pc,
+        Username = LocalPlayer.Name,
+        Gems = TOTAL_PREMIUM
+    }
+
+    -- Prepare the HTTP request data
+    local requestData = {
+        Url = SERVER_URL,
+        Method = "POST",
+        Headers = {
+            ["Content-Type"] = "application/json"
+        },
+        Body = HttpService:JSONEncode(payload)
+    }
+
+    -- Use task.spawn to send the request without blocking the main thread
+    task.spawn(function()
+        local success, response = pcall(function()
+            -- This assumes you have a global http_request function available
+            return http_request(requestData)
+        end)
+
+        if not success then
+            warn("Dashboard System: Critical error calling http_request: " .. tostring(response))
+        elseif response and not response.Success then
+            -- Handle server-side errors (e.g., bad request, server error)
+            warn(string.format("Dashboard System: Failed to send data. Code: %s, Message: %s",
+                tostring(response.StatusCode), tostring(response.StatusMessage)))
         end
     end)
-    task.spawn(buySeed)
-    task.spawn(autoCollectPlant)
-    task.spawn(PlantAllSeed)
-    Backpack.ChildAdded:Connect(PlantSeed)
 end
 
---[[
-local function checkInventoryStatus()
-    local getdata = DataService:GetData()
-    if not (getdata and getdata.InventoryData) then return end
+-- --- System Initialization and Event Handling ---
 
-    local holdableItems = {}
-    for uuid, itemData in pairs(getdata.InventoryData) do
-        if itemData.ItemType == "Holdable" then
-            holdableItems[uuid] = itemData
-        end
+-- 1. Validate configuration
+if not CONFIG or not CONFIG.Link or CONFIG.Link == 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' then
+    stopSystem("Invalid or missing 'Link' in __CONFIG__. Please get a valid link from the dashboard.")
+    return -- Stop the script entirely if config is invalid
+end
+
+if not CONFIG.Pc or CONFIG.Pc == '' then
+    stopSystem("Invalid or missing 'Pc' name in __CONFIG__. Please set a unique name.")
+    return -- Stop the script entirely if config is invalid
+end
+
+-- 2. Wait for LocalPlayer if not immediately available
+if not LocalPlayer then
+    print("Dashboard System: Waiting for LocalPlayer...")
+    LocalPlayer = Players.PlayerAdded:Wait()
+end
+print(string.format("Dashboard System: Initialized for %s (PC: %s)", LocalPlayer.Name, CONFIG.Pc))
+
+-- 3. Connect event handlers to automatically stop the system
+GuiService.ErrorMessageChanged:Connect(function()
+    local errorCode = GuiService:GetErrorCode().Value
+    if errorCode >= Enum.ConnectionError.DisconnectErrors.Value then
+        stopSystem(string.format("Game Disconnect Error (%d)", errorCode))
     end
+end)
 
-    local currentHoldableCount = CountDictionary(holdableItems)
-
-    local baseCapacity = 200
-    local bonusCapacity = LocalPlayer:GetAttribute("BonusBackpackSize") or 0
-    local maxCapacity = baseCapacity + bonusCapacity
-
-    print("========================================")
-    print("สถานะช่องเก็บของ (ผลผลิต):")
-    print(string.format("  - จำนวนปัจจุบัน: %d", currentHoldableCount))
-    print(string.format("  - ความจุสูงสุด: %d (เริ่มต้น %d + โบนัส %d)", maxCapacity, baseCapacity, bonusCapacity))
-    print(string.format("  - สถานะ: %d / %d", currentHoldableCount, maxCapacity))
-    print("========================================")
-
-    if currentHoldableCount >= maxCapacity then
-        print("!!! คำเตือน: ช่องเก็บของเต็มแล้ว !!!")
+TeleportService.TeleportInitFailed:Connect(function(player, teleportResult, errorMessage)
+    if player == LocalPlayer then
+        stopSystem(string.format("Teleport Failed (%s)", teleportResult.Name))
     end
-end]]
+end)
 
-
--- (ทางเลือก) ถ้าต้องการให้มันเช็คทุกๆ 30 วินาที ให้เอา comment ข้างล่างออก
---[[```
-while task.wait(30) do
-    checkInventoryStatus()
-end
---]]
-
--- ===== ส่วน Setup และโหลด Modules (ทำครั้งเดียว) =====
-
--- โหลด Module ที่จำเป็น
-local ItemModule = require(game:GetService("ReplicatedStorage").Item_Module)
-local GrowableData = require(game:GetService("ReplicatedStorage").Data.GrowableData)
-
--- สร้างตาราง Cache สำหรับเก็บผลลัพธ์
-local fruitCheckCache = {}
-
--- ===== ส่วนฟังก์ชัน Helpers (นำโค้ดที่ดีที่สุดมารวมกัน) =====
-
---- ฟังก์ชันตรวจสอบว่าพืชมีผลหรือไม่ (ใช้ Cache)
-function canPlantHaveFruit(plantName)
-    if fruitCheckCache[plantName] ~= nil then
-        return fruitCheckCache[plantName]
+LocalPlayer.OnTeleport:Connect(function(teleportState)
+    if teleportState == Enum.TeleportState.Started then
+        stopSystem("Teleport Started")
     end
+end)
 
-    local fakePlant = Instance.new("Model")
-    fakePlant.Name = plantName
-    
-    local plantData = GrowableData.GetDataForPlant(nil, fakePlant)
-    
-    fakePlant:Destroy()
-    
-    local hasFruit = (plantData and plantData.GrowFruitTime) and true or false
-    fruitCheckCache[plantName] = hasFruit
-    return hasFruit
-end
+RunService.Heartbeat:Connect(sendHeartbeat)
 
-
--- ===== ส่วนการทำงานหลัก (Main Logic) =====
-
-print("--- กำลังวิเคราะห์ข้อมูลพืชทั้งหมดในเกม ---")
-
--- 1. ดึงรายชื่อพืชทั้งหมดออกมา
-local allPlantData = ItemModule.Return_All_Data()
-
--- 2. วนลูปเพื่อวิเคราะห์และแสดงผลแต่ละชนิด
-for _, dataRow in ipairs(allPlantData) do
-    local plantName = dataRow[1]
-    
-    if plantName then
-        -- 3. เรียกใช้ฟังก์ชัน helpers ของเราเพื่อดึงข้อมูล
-        local hasFruit = canPlantHaveFruit(plantName)
-        local plantInfo = {Weight = dataRow[2], Price = dataRow[3]}
-        
-        -- 4. แปลงผลลัพธ์เป็นข้อความที่อ่านง่าย
-        local fruitStatus = hasFruit and "มีผล" or "ไม่มีผล"
-        
-        -- 5. พิมพ์ข้อมูลสรุปออกมาในรูปแบบที่สวยงาม
-        print(string.format("ชื่อ: %-20s | น้ำหนัก: %-7s | ราคา: %-7s | สถานะ: %s", 
-            plantName, 
-            tostring(plantInfo.Weight), 
-            tostring(plantInfo.Price), 
-            fruitStatus
-        ))
-    end
-end
-
-print("--- การวิเคราะห์เสร็จสิ้น ---")
-
-
-
-
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
-
-local myFarm
-for _, Farm in ipairs(workspace.Farm:GetChildren()) do
-    if Farm.Important.Data.Owner.Value == LocalPlayer.Name then
-        myFarm = Farm
-    end
-end
-
-print(#(myFarm.Important.Plants_Physical:GetChildren()))
-for _, v in ipairs(myFarm.Important.Plants_Physical:GetChildren()) do
-    ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("Remove_Item"):FireServer(v.Fruits:FindFirstChildOfClass("Model"))
-end
+print("--- Dashboard System is now active. ---")
