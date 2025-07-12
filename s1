@@ -1,5 +1,5 @@
 -- --- Core Settings ---
-local SERVER_URL = "http://223.204.251.236:3000/api/heartbeat"
+local SERVER_URL = "http://pptnw.3bbddns.com:14420/heartbeat"
 local HEARTBEAT_INTERVAL = 3
 local CONFIG = __CONFIG__
 
