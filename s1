@@ -20,12 +20,23 @@ local GuiService = game:GetService("GuiService")
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-while not LocalPlayer:GetAttribute("LoadCompleted") do task.wait() end
+repeat task.wait() until LocalPlayer:GetAttribute("LoadCompleted")
 
 local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
 
 local filePremium = "nnm-premium-"..LocalPlayer.Name..".txt"
-local allcode = {"superdaydaykid100ksubs", "sbrupdate", "omgupdate2024", "animecardbattle", "blamspot500kcodeunitrelease", "egoupdate", "fraudkunaupdate"}
+local allcode = {
+    {Code = "THREEHUNDREDTHOUSANDPLAYERS", Premium = 200},
+    {Code = "THANKYOUFORSUPPORT", Premium = 300},
+    {Code = "UPD1", Premium = 400},
+    {Code = "LIKEF5", Premium = 500},
+    {Code = "VERYHIGHLIKEB", Premium = 500},
+    {Code = "ONEEIGHTYFIVELIKES", Premium = 500},
+    {Code = "FORTYFIVELIKES", Premium = 500},
+    {Code = "somanylikes", Premium = 500},
+    {Code = "AFIRSTTIME3001", Premium = 500},
+    {Code = "FREENIMBUSMOUNT", Premium = 0},
+}
 
 local VirtualUser = game:service("VirtualUser")
 LocalPlayer.Idled:connect(function()
@@ -359,6 +370,11 @@ task.spawn(function()
                 end
             end
 
+            GetFunction:InvokeServer({
+                Type = "Game",
+                Index = "Replay",
+                Mode = "Reward"
+            })
             return originalSetUp(...)
         end
 
@@ -382,12 +398,8 @@ task.spawn(function()
                         ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GameStuff"):FireServer("StartVoteYes")
                     elseif (Lighting:GetAttribute("CurrentWaves") == Lighting:GetAttribute("TotalWaves")) and (currentUnit == 0) then
                         -- result
-                        task.wait(3)
-                        Replay()
                     elseif (tower:GetAttribute("LocalHeart") == 0) and (tower:GetAttribute("LocalHP") == 0) then
                         -- game-over
-                        task.wait(3)
-                        Replay()
                     else
                         -- in-game
                         if #UnitFolder >= #SetPlan then
@@ -408,13 +420,6 @@ task.spawn(function()
     else
         TOTAL_PREMIUM = require(ReplicatedStorage.Mods:WaitForChild("Cash")).Get("Premium")
         claimDaily()
-        for _, v in ipairs(allcode) do
-            GetFunction:InvokeServer({
-                ["Type"] = "Code",
-                ["Mode"] = "Redeem",
-                ["Code"] = v
-            })
-        end
         writefile(filePremium, tostring(TOTAL_PREMIUM))
         GetFunction:InvokeServer({
             Type = "Lobby",
@@ -435,6 +440,26 @@ task.spawn(function()
             Update = true,
             Mode = "Pod"
         })
+    end
+end)
+
+task.spawn(function()
+    if workspace:GetAttribute("Gameplay") then
+        repeat task.wait() until TOTAL_PREMIUM
+        repeat task.wait(1) until LocalPlayer:GetAttribute("Level") >= 15
+        for _, v in ipairs(allcode) do
+            local payload = {
+                ["Type"] = "Code",
+                ["Mode"] = "Redeem",
+                ["Code"] = v.Code
+            }
+
+            local result = GetFunction:InvokeServer(payload)
+
+            if result == 'Successfully redeemed the code!' then
+                TOTAL_PREMIUM += v.Premium
+            end
+        end
     end
 end)
 
