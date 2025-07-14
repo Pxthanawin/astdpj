@@ -7,6 +7,8 @@ local isSystemActive = true
 local lastHeartbeatSent = 0
 local TOTAL_PREMIUM
 
+repeat task.wait() until game:IsLoaded()
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
