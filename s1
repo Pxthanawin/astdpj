@@ -21,6 +21,7 @@ local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 repeat task.wait() until LocalPlayer:GetAttribute("LoadCompleted")
+repeat task.wait() until LocalPlayer:GetAttribute("Level")
 
 local GetFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetFunction")
 
