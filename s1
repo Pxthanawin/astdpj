@@ -266,6 +266,20 @@ task.spawn(function()
             DailyRewardMod.Claim()
         end
     end
+
+    local claimLevelReward = function()
+        local level = LocalPlayer:GetAttribute("Level")
+        local LevelRewards = GetFunction:InvokeServer({Type = "LevelRewards"})
+        for index, milestoneInfo in ipairs(LevelRewards) do
+            if level >= milestoneInfo.Level and not milestoneInfo.Claimed then
+                for _, item in ipairs(milestoneInfo.Rewards) do
+                    if item.Type == "Cash" and item.CashType == "Premium" then
+                        TOTAL_PREMIUM += item.Amount
+                    end
+                end
+            end
+        end
+    end
     --
 
     if workspace:GetAttribute("Gameplay") then
@@ -275,6 +289,30 @@ task.spawn(function()
         else
             TOTAL_PREMIUM = 0
         end
+
+        task.spawn(function()
+            repeat task.wait(1) until LocalPlayer:GetAttribute("Level") >= 15
+            for _, v in ipairs(allcode) do
+                local payload = {
+                    ["Type"] = "Code",
+                    ["Mode"] = "Redeem",
+                    ["Code"] = v.Code
+                }
+
+                local result = GetFunction:InvokeServer(payload)
+
+                if result == 'Successfully redeemed the code!' then
+                    TOTAL_PREMIUM += v.Premium
+                end
+            end
+        end)
+
+        claimLevelReward()
+        LocalPlayer:GetAttributeChangedSignal("Level"):Connect(function()
+            if LocalPlayer:GetAttribute("Level") % 5 == 0 then
+                claimLevelReward()
+            end
+        end)
 
         task.spawn(function()
             task.wait(10)
@@ -443,25 +481,7 @@ task.spawn(function()
     end
 end)
 
-task.spawn(function()
-    if workspace:GetAttribute("Gameplay") then
-        repeat task.wait() until TOTAL_PREMIUM
-        repeat task.wait(1) until LocalPlayer:GetAttribute("Level") >= 15
-        for _, v in ipairs(allcode) do
-            local payload = {
-                ["Type"] = "Code",
-                ["Mode"] = "Redeem",
-                ["Code"] = v.Code
-            }
 
-            local result = GetFunction:InvokeServer(payload)
-
-            if result == 'Successfully redeemed the code!' then
-                TOTAL_PREMIUM += v.Premium
-            end
-        end
-    end
-end)
 
 
 -- log
