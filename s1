@@ -270,10 +270,11 @@ task.spawn(function()
     local claimLevelReward = function()
         local level = LocalPlayer:GetAttribute("Level")
         local LevelRewards = GetFunction:InvokeServer({Type = "LevelRewards"})
-        for index, milestoneInfo in ipairs(LevelRewards) do
+        for _, milestoneInfo in ipairs(LevelRewards) do
             if level >= milestoneInfo.Level and not milestoneInfo.Claimed then
                 for _, item in ipairs(milestoneInfo.Rewards) do
                     if item.Type == "Cash" and item.CashType == "Premium" then
+                        GetFunction:InvokeServer({Type = "Code", Mode = "Level", Code = milestoneInfo.Level})
                         TOTAL_PREMIUM += item.Amount
                     end
                 end
@@ -457,6 +458,8 @@ task.spawn(function()
         end)
     else
         TOTAL_PREMIUM = require(ReplicatedStorage.Mods:WaitForChild("Cash")).Get("Premium")
+        claimLevelReward()
+        claimQuest()
         claimDaily()
         writefile(filePremium, tostring(TOTAL_PREMIUM))
         GetFunction:InvokeServer({
