@@ -7,8 +7,6 @@ local isSystemActive = true
 local lastHeartbeatSent = 0
 local TOTAL_PREMIUM
 
-repeat task.wait() until game:IsLoaded()
-
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
@@ -58,7 +56,7 @@ local backgroundFrame = Instance.new("Frame")
 backgroundFrame.Name = "Background"
 backgroundFrame.Size = UDim2.new(1, 0, 1, 0)
 backgroundFrame.BackgroundColor3 = Color3.new(0, 0, 0)
-backgroundFrame.BackgroundTransparency = 0.5
+backgroundFrame.BackgroundTransparency = 0
 backgroundFrame.BorderSizePixel = 0
 backgroundFrame.Parent = mainGui
 
@@ -322,7 +320,7 @@ task.spawn(function()
             task.wait(10)
             for _, v in ipairs(PlayerGui:GetChildren()) do
                 if table.find({"GU", "MainUI", "MainUI2"}, v.Name) then
-                    --v.Enabled = false
+                    v.Enabled = false
                 else
                     v:Destroy()
                 end
